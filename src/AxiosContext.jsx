@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useRef } from "react";
 import axios from "axios";
 
 const AxiosContext = createContext();
@@ -7,10 +7,15 @@ function AxiosContextProvider({ children }) {
   const [tweets, setTweets] = useState([]);
   const [continuationToken, setContinuationToken] = useState(undefined);
   const [username, setUsername] = useState();
-   const [isInputVisible, setIsInputVisible] = useState(false);
+  const [isInputVisible, setIsInputVisible] = useState(false);
+  const [index, setIndex] = useState(0);
+
+  function changeDirection() {
+    setIndex((prev) => prev + 1);
+  }
 
   function onInputVisibilityButton(e) {
-    e.preventDefault()
+    e.preventDefault();
     setIsInputVisible((prev) => !prev);
   }
 
@@ -38,52 +43,67 @@ function AxiosContextProvider({ children }) {
       setTweets(response?.data?.results);
       setContinuationToken(response?.data?.continuation_token);
       setUsername(response?.data?.results[0]?.user?.username);
-      setIsInputVisible(false)
+      setIsInputVisible(false);
     } catch (error) {
       console.log(error);
     }
   }
 
   const [runRequest, setRunRequest] = useState(true);
+  const isFetching = useRef(false);
+  useEffect(() => {
+    if (runRequest === false || index < 1 || isFetching.current) {
+      return;
+    }
+
+    isFetching.current = true;
+    axios({
+      method: "GET",
+      url: "https://twitter154.p.rapidapi.com/user/tweets/continuation",
+      params: {
+        username: username,
+        continuation_token: continuationToken,
+      },
+      headers: {
+        "x-rapidapi-key": import.meta.env.VITE_TWITTER_API_KEY,
+        "x-rapidapi-host": "twitter154.p.rapidapi.com",
+      },
+    })
+      .then((response) => {
+        setTweets((prevTweets) => [
+          ...prevTweets,
+          ...(response.data.results || []),
+        ]);
+        setContinuationToken(response?.data.continuation_token);
+        if (response.data.results?.length === 0) {
+          setRunRequest(false);
+        }
+      })
+      .catch((error) => {
+        console.log("Error", error);
+      })
+      .finally(() => {
+        isFetching.current = false;
+      });
+  }, [continuationToken, username, index]);
 
   useEffect(() => {
-    if (runRequest === false) {
-      return;
-    } else {
-      const timeoutId = setTimeout(() => {
-        axios({
-          method: "GET",
-          url: "https://twitter154.p.rapidapi.com/user/tweets/continuation",
-          params: {
-            username: username,
-            continuation_token: continuationToken,
-          },
-          headers: {
-            "x-rapidapi-key": import.meta.env.VITE_TWITTER_API_KEY,
-            "x-rapidapi-host": "twitter154.p.rapidapi.com",
-          },
-        })
-          .then((response) => {
-            setTweets((prevTweets) => [
-              ...prevTweets,
-              ...(response.data.results || []),
-            ]);
-            setContinuationToken(response?.data.continuation_token);
-            if (response.data.results?.length === 0) {
-              setRunRequest(false);
-            }
-          })
-          .catch((error) => {
-            console.log("Error", error);
-          });
-      }, 7500);
-      return () => clearTimeout(timeoutId);
+    if (index === 1) {
+      setIndex(0);
     }
-  }, [continuationToken, username]);
+  }, [index]);
 
   return (
     <AxiosContext.Provider
-      value={{ getTweets, tweets, username, handleChange, onInputVisibilityButton, isInputVisible }}
+      value={{
+        getTweets,
+        tweets,
+        username,
+        handleChange,
+        onInputVisibilityButton,
+        isInputVisible,
+        changeDirection,
+      }}
     >
       {children}
     </AxiosContext.Provider>

@@ -5,11 +5,12 @@ import { AxiosContext } from "./AxiosContext";
 import ReactPlayer from "react-player";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { Pagination, Thumbs } from "swiper/modules";
+import { Pagination, Thumbs, Virtual } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import gsap from "gsap";
 import { CarouselCard } from "./Components/CarouselCard";
+import { FirebaseContext } from "./FirebaseContext";
 
 dayjs.extend(relativeTime);
 
@@ -21,7 +22,10 @@ function Carousel() {
     handleChange,
     isInputVisible,
     onInputVisibilityButton,
+    changeDirection
   } = useContext(AxiosContext);
+
+  const {saveTweet, media} = useContext(FirebaseContext)
 
 
   const uniqueMediaMap = new Map();
@@ -36,13 +40,15 @@ function Carousel() {
 
   const mediaArray = Array.from(uniqueMediaMap.values()).sort(
     (a, b) => b.timestamp - a.timestamp
-  );
+  )?.concat(media);
+
+  console.log(mediaArray)
 
     const [accountIndex, setAccountIndex] = useState(0);
   const accounts = ["NASA", "NatGeo", "ArchDaily", "RedBull", "HumansOfNY"];
 
   useEffect(() => {
-    if (mediaArray.length !== 0) {
+    if (tweets.length !== 0) {
       return;
     } else {
       const intervalId = setInterval(() => {
@@ -54,7 +60,7 @@ function Carousel() {
 
   const accountRef = useRef(null);
   useEffect(() => {
-    if (mediaArray.length !== 0) {
+    if (tweets.length !== 0) {
       return;
     } else {
       gsap.to(accountRef.current, {
@@ -71,7 +77,13 @@ function Carousel() {
 
   return (
     <div className="App">
-      <form className={isInputVisible ? "form" : "form-closed"} action="">
+      <form
+       onKeyDown={(e) => {
+        if(e.key === "Enter"){
+            getTweets()
+        }
+       }}
+      className={isInputVisible ? "form" : "form-closed"} action="">
         <div
           style={{
             display: "flex",
@@ -114,17 +126,18 @@ function Carousel() {
                     border: "none",
                     position: "absolute",
                     right: 0,
+                    color: "#e8e8e8 !important"
                   }
                 : { display: "none" }
             }
             onClick={getTweets}
           >
-            <i className="fa-solid fa-arrow-right"></i>
+            <i style={{color: "#e8e8e8 !important"}} className="fa-solid fa-arrow-right"></i>
           </button>
         </div>
       </form>
       <div
-        style={mediaArray.length === 0 ? { display: "" } : { display: "none" }}
+        style={tweets.length === 0 ? { display: "" } : { display: "none" }}
         className="cta"
       >
         <div className="cta-text-container">
@@ -136,28 +149,35 @@ function Carousel() {
         </div>
       </div>
       <Swiper
-        modules={[Pagination, Thumbs]}
+      onSlideChange={changeDirection}
+        modules={[Pagination, Thumbs, Virtual]}
+        virtual={true}
         slidesPerView={1}
+        autoHeight={true}
         style={
           mediaArray?.length === 0
             ? { display: "none" }
-            : { display: "block", minHeight: "100vh", minWidth: "100vw" }
-        }
-      >
-        {mediaArray.map((tweet) => (
-          <SwiperSlide key={tweet.tweet_id}>
+            : { display: "block", minWidth: "100vw" }
+          }
+          >
+        {mediaArray.map((tweet, index) => {
+          const isLiked = media.some((savedTweet) => savedTweet.tweetId === tweet.tweet_id);
+          return (
+
+          <SwiperSlide style={tweet.tweetId === undefined ? {display: ""} : {display: "none"}} virtualIndex={index} onClick={changeDirection} key={tweet.tweet_id}>
             <CarouselCard tweet={tweet} />
             <div
               style={
                 tweet.video_url !== null ? { display: "none" } : { display: "" }
               }
               className="image-swiper"
-            >
+              >
               <Swiper
-                direction="vertical"
+              direction="vertical"
                 pagination={{ clickable: true }}
                 modules={[Pagination, Thumbs]}
                 slidesPerView={1}
+                autoHeight={true}
                 style={
                   tweet?.media_url === null
                     ? { display: "none" }
@@ -199,7 +219,7 @@ function Carousel() {
                 <img
                   style={{ borderRadius: 16, marginRight: 6 }}
                   width="50px"
-                  src={tweet.user.profile_pic_url}
+                  src={tweet?.user?.profile_pic_url}
                   alt=""
                 />
                 <div style={{width: "85%", marginBottom: 6}}>
@@ -213,9 +233,14 @@ function Carousel() {
               <small style={{ textAlign: "right" }}>
                 {dayjs(tweet?.creation_date).fromNow()}
               </small>
+              <label style={tweet?.video_url === null ? {display: "none"} : {display: "block", textAlign: "right"}} htmlFor="">
+
+              <i style={isLiked ? {textAlign: "right", color: "red"} : {textAlign: "right"}} onClick={() => saveTweet(tweet?.video_url[tweet?.video_url?.length - 1].url, tweet?.tweet_id, tweet?.user?.username)} class={isLiked ? "fa-solid fa-heart" : "fa-regular fa-heart"}></i>
+              </label>
             </div>
           </SwiperSlide>
-        ))}
+          )
+})}
       </Swiper>
     </div>
   );

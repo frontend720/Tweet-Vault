@@ -4,9 +4,10 @@ import ReactPlayer from "react-player";
 export const CarouselCard = memo(({ tweet }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const cardHeight = tweet?.extended_entities?.media[0]?.sizes?.small?.h 
-    ? `${tweet.extended_entities.media[0].sizes.small.h}px` 
-    : "400px";
+  const videoSrc = tweet?.video_url?.at(-1)?.url || tweet?.post;
+
+  const rawHeight = tweet?.extended_entities?.media?.[0]?.sizes?.small?.h;
+  const cardHeight = rawHeight ? `${rawHeight}px` : "400px";
 
   return (
     <div className="card">
@@ -21,7 +22,7 @@ export const CarouselCard = memo(({ tweet }) => {
         className="react-video"
         playsInline={true}
         width="100%"
-        height={tweet?.extended_entities?.media[0]?.sizes?.small?.h || "auto"}        
+        height={rawHeight || "auto"}        
         style={
           tweet.video_url !== null
             ? {
@@ -39,9 +40,7 @@ export const CarouselCard = memo(({ tweet }) => {
         light={tweet.extended_entities?.media?.[0]?.media_url_https}
         onClickPreview={() => setIsPlaying(true)}
         src={
-          tweet.video_url !== null
-            ? tweet?.video_url[tweet?.video_url?.length - 1].url
-            : null
+          videoSrc
         }
         preload="true"
         config={{
