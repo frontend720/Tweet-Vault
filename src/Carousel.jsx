@@ -2,7 +2,6 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "./Carousel.css";
 import { AxiosContext } from "./AxiosContext";
-import ReactPlayer from "react-player";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Pagination, Thumbs, Virtual } from "swiper/modules";
@@ -22,11 +21,11 @@ function Carousel() {
     handleChange,
     isInputVisible,
     onInputVisibilityButton,
-    changeDirection
+    changeDirection,
+    retweetRequest,
   } = useContext(AxiosContext);
 
-  const {saveTweet, media} = useContext(FirebaseContext)
-
+  const { saveTweet, media } = useContext(FirebaseContext);
 
   const uniqueMediaMap = new Map();
 
@@ -38,13 +37,11 @@ function Carousel() {
     }
   });
 
-  const mediaArray = Array.from(uniqueMediaMap.values()).sort(
-    (a, b) => b.timestamp - a.timestamp
-  )?.concat(media);
+  const mediaArray = Array.from(uniqueMediaMap.values())
+    .sort((a, b) => b.timestamp - a.timestamp)
+    ?.concat(media);
 
-  console.log(mediaArray)
-
-    const [accountIndex, setAccountIndex] = useState(0);
+  const [accountIndex, setAccountIndex] = useState(0);
   const accounts = ["NASA", "NatGeo", "ArchDaily", "RedBull", "HumansOfNY"];
 
   useEffect(() => {
@@ -75,15 +72,19 @@ function Carousel() {
     }
   }, [accountIndex]);
 
+  // console.log(media);
+
   return (
     <div className="App">
       <form
-       onKeyDown={(e) => {
-        if(e.key === "Enter"){
-            getTweets()
-        }
-       }}
-      className={isInputVisible ? "form" : "form-closed"} action="">
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            getTweets();
+          }
+        }}
+        className={isInputVisible ? "form" : "form-closed"}
+        action=""
+      >
         <div
           style={{
             display: "flex",
@@ -126,13 +127,16 @@ function Carousel() {
                     border: "none",
                     position: "absolute",
                     right: 0,
-                    color: "#e8e8e8 !important"
+                    color: "#e8e8e8 !important",
                   }
                 : { display: "none" }
             }
             onClick={getTweets}
           >
-            <i style={{color: "#e8e8e8 !important"}} className="fa-solid fa-arrow-right"></i>
+            <i
+              style={{ color: "#e8e8e8 !important" }}
+              className="fa-solid fa-arrow-right"
+            ></i>
           </button>
         </div>
       </form>
@@ -149,7 +153,7 @@ function Carousel() {
         </div>
       </div>
       <Swiper
-      onSlideChange={changeDirection}
+        onSlideChange={changeDirection}
         modules={[Pagination, Thumbs, Virtual]}
         virtual={true}
         slidesPerView={1}
@@ -158,90 +162,156 @@ function Carousel() {
           mediaArray?.length === 0
             ? { display: "none" }
             : { display: "block", minWidth: "100vw" }
-          }
-          >
+        }
+      >
         {mediaArray.map((tweet, index) => {
-          const isLiked = media.some((savedTweet) => savedTweet.tweetId === tweet.tweet_id);
+          const isLiked = media.some(
+            (savedTweet) => savedTweet.tweetId === tweet.tweet_id
+          );
           return (
-
-          <SwiperSlide style={tweet.tweetId === undefined ? {display: ""} : {display: "none"}} virtualIndex={index} onClick={changeDirection} key={tweet.tweet_id}>
-            <CarouselCard tweet={tweet} />
-            <div
+            <SwiperSlide
               style={
-                tweet.video_url !== null ? { display: "none" } : { display: "" }
+                tweet.tweetId === undefined
+                  ? { display: "" }
+                  : { display: "none" }
               }
-              className="image-swiper"
-              >
-              <Swiper
-              direction="horizontal"
-              nested={true}
-                pagination={{ clickable: true }}
-                modules={[Pagination, Thumbs]}
-                slidesPerView={1}
-                autoHeight={true}
-                style={
-                  tweet?.media_url === null
+              virtualIndex={index}
+              onClick={changeDirection}
+              key={tweet.tweet_id}
+            >
+              <CarouselCard
+                tweetIdStyle={
+                  tweet.tweetId !== undefined
                     ? { display: "none" }
-                    : {
-                        height:
-                          tweet?.extended_entities?.media[0]?.sizes?.small?.h,
-
-                        objectFit:
-                          tweet?.extended_entities?.media[0]?.sizes?.resize,
-                      }
+                    : { display: "" }
                 }
-              >
-                {tweet?.media_url?.map((image) => (
-                  <SwiperSlide
-                    style={
-                      tweet.video_url === null
-                        ? {
-                            height:
-                              tweet?.extended_entities?.media[0]?.sizes?.small
-                                ?.h,
-                          }
-                        : { display: "none" }
-                    }
-                    key={image}
-                  >
-                    <img style={{ width: "100%" }} src={image} alt="" />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-            <div className="text-container">
+                tweet={tweet}
+              />
               <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
+                style={
+                  tweet.video_url !== null
+                    ? { display: "none" }
+                    : { display: "" }
+                }
+                className="image-swiper"
               >
-                <img
-                  style={{ borderRadius: 16, marginRight: 6 }}
-                  width="50px"
-                  src={tweet?.user?.profile_pic_url}
-                  alt=""
-                />
-                <div style={{width: "85%", marginBottom: 6}}>
+                <Swiper
+                  direction="horizontal"
+                  nested={true}
+                  pagination={{ clickable: true }}
+                  modules={[Pagination, Thumbs]}
+                  slidesPerView={1}
+                  autoHeight={true}
+                  style={
+                    tweet?.media_url === null
+                      ? { display: "none" }
+                      : {
+                          height:
+                            tweet?.extended_entities?.media[0]?.sizes?.small?.h,
 
-                <label style={{width: "50%"}} htmlFor="">
-                  {" "}
-                  <strong>{tweet?.user?.username}</strong> {tweet?.text}
-                </label>
-                </div>
+                          objectFit:
+                            tweet?.extended_entities?.media[0]?.sizes?.resize,
+                        }
+                  }
+                >
+                  {tweet?.media_url?.map((image) => (
+                    <SwiperSlide
+                      style={
+                        tweet.video_url === null
+                          ? {
+                              height:
+                                tweet?.extended_entities?.media[0]?.sizes?.small
+                                  ?.h,
+                            }
+                          : { display: "none" }
+                      }
+                      key={image}
+                    >
+                      <img style={{ width: "100%" }} src={image} alt="" />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
               </div>
-              <small style={{ textAlign: "right" }}>
-                {dayjs(tweet?.creation_date).fromNow()}
-              </small>
-              <label style={tweet?.video_url === null ? {display: "none"} : {display: "block", textAlign: "right"}} htmlFor="">
-
-              <i style={isLiked ? {textAlign: "right", color: "red"} : {textAlign: "right"}} onClick={() => saveTweet(tweet?.video_url[tweet?.video_url?.length - 1].url, tweet?.tweet_id, tweet?.user?.username)} class={isLiked ? "fa-solid fa-heart" : "fa-regular fa-heart"}></i>
-              </label>
-            </div>
-          </SwiperSlide>
-          )
-})}
+              <div
+                style={
+                  tweet.tweetId !== undefined
+                    ? { display: "none" }
+                    : { display: "" }
+                }
+                className="text-container"
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <img
+                    style={{ borderRadius: 16, marginRight: 6 }}
+                    width="50px"
+                    src={tweet?.user?.profile_pic_url}
+                    alt=""
+                  />
+                  <div style={{ width: "85%", marginBottom: 6 }}>
+                    <label style={{ width: "35%", display: "flex" }} htmlFor="">
+                      {" "}
+                      <button
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          padding: 8,
+                          all: "unset",
+                          width: 300,
+                        }}
+                        disabled={tweet?.retweet_status === null ? true : false}
+                        onClick={() =>
+                          retweetRequest(tweet?.retweet_status?.user?.username)
+                        }
+                        htmlFor=""
+                      >
+                        <strong>{tweet?.user?.username}</strong> {tweet?.text}
+                      </button>
+                    </label>
+                  </div>
+                </div>
+                <small style={{ textAlign: "right" }}>
+                  {dayjs(tweet?.creation_date).fromNow()}
+                </small>
+                <label
+                  style={
+                    tweet?.video_url === null
+                      ? { display: "none" }
+                      : { display: "block", textAlign: "right" }
+                  }
+                  htmlFor=""
+                >
+                  <i
+                    style={
+                      isLiked
+                        ? { textAlign: "right", color: "red" }
+                        : { textAlign: "right" }
+                    }
+                    onClick={() =>
+                      saveTweet(
+                        tweet?.video_url[tweet?.video_url?.length - 1].url,
+                        tweet?.tweet_id,
+                        tweet?.user?.username,
+                        tweet?.extended_entities?.media[0]?.sizes?.small?.h,
+                        tweet?.extended_entities?.media[0]?.sizes?.small
+                          ?.resize,
+                        tweet.extended_entities?.media?.[0]?.media_url_https
+                      )
+                    }
+                    class={
+                      isLiked ? "fa-solid fa-heart" : "fa-regular fa-heart"
+                    }
+                  ></i>
+                </label>
+              </div>
+            </SwiperSlide>
+          );
+        })}
       </Swiper>
     </div>
   );

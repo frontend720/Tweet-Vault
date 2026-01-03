@@ -1,21 +1,28 @@
-import { useState, useEffect, createContext } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { db } from "./config";
 import { setDoc, doc, getDocs, collection } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
+import { AxiosContext } from "./AxiosContext";
 
 const FirebaseContext = createContext();
 
 function FirebaseContextProvider({ children }) {
+
+    const {setIndex} = useContext(AxiosContext)
+
   const [isTweetSaved, setIsTweetSaved] = useState(false);
   const [media, setMedia] = useState([])
 
-  async function saveTweet(post, tweet_id, username) {
+  async function saveTweet(post, tweet_id, username, height, fit, poster) {
     const now = new Date();
     const response = await setDoc(doc(db, "doccnasty@gmail.com", uuidv4()), {
       post: post,
       username: username,
       tweetId: tweet_id,
       timestamp: now.getTime(),
+      height: height,
+      fit: fit,
+      poster: poster
     });
     try {
       console.log(response);
@@ -27,6 +34,7 @@ function FirebaseContextProvider({ children }) {
 
   async function getTweets() {
       const media = [];
+      setIndex(0)
     const querySnapshot = await getDocs(collection(db, "doccnasty@gmail.com"));
     try {
       querySnapshot.forEach((tweet) => {
@@ -38,7 +46,7 @@ function FirebaseContextProvider({ children }) {
     }
   }
 
-  console.log(media)
+//   console.log(media)
 
   useEffect(() => {
     getTweets();

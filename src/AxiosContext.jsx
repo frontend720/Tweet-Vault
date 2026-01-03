@@ -47,6 +47,35 @@ function AxiosContextProvider({ children }) {
     } catch (error) {
       console.log(error);
     }
+    // setTweets([])
+  }
+
+  async function retweetRequest(retweeted_from){
+    setIndex(0)
+    setRunRequest(true)
+    const response = await axios({
+      method: "GET",
+      url: "https://twitter154.p.rapidapi.com/user/tweets",
+      params: {
+        username: retweeted_from,
+        limit: 20,
+        include_replies: false,
+        include_pinned: false,
+      },
+      headers: {
+        "x-rapidapi-key": import.meta.env.VITE_TWITTER_API_KEY,
+        "x-rapidapi-host": "twitter154.p.rapidapi.com",
+      },
+    })
+    try {
+      setTweets(response?.data?.results);
+      setContinuationToken(response?.data?.continuation_token);
+      setUsername(response?.data?.results[0]?.user?.username);
+    } catch (error) {
+      console.log(error)
+    }
+    // setTweets([])
+    setIndex(0)
   }
 
   const [runRequest, setRunRequest] = useState(true);
@@ -75,6 +104,7 @@ function AxiosContextProvider({ children }) {
           ...(response.data.results || []),
         ]);
         setContinuationToken(response?.data.continuation_token);
+        setIndex(0)
         if (response.data.results?.length === 0) {
           setRunRequest(false);
         }
@@ -87,22 +117,24 @@ function AxiosContextProvider({ children }) {
       });
   }, [continuationToken, username, index]);
 
-  useEffect(() => {
-    if (index === 1) {
-      setIndex(0);
-    }
-  }, [index]);
+  // useEffect(() => {
+  //   if (isFetching.current === false) {
+  //     setIndex(0);
+  //   }
+  // }, [isFetching.current]);
 
   return (
     <AxiosContext.Provider
       value={{
         getTweets,
+        retweetRequest,
         tweets,
         username,
         handleChange,
         onInputVisibilityButton,
         isInputVisible,
         changeDirection,
+        setIndex
       }}
     >
       {children}
