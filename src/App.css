@@ -1,0 +1,171 @@
+#root {
+max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+}
+.App{
+  background-color: #444444;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;       /* Centers the blocks (Video, Label, Small) horizontally */
+  justify-content: center;   /* Centers items vertically (if the card has a fixed height) */
+  text-align: center;        /* Centers the TEXT inside the label and small tags */
+  min-width: 100vw !important;
+}
+
+.form{
+  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
+  backdrop-filter: blur(12px); /* Softens the background video/content */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
+  border-radius: 25px;
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.1), /* Outer shadow for depth */
+    inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
+  transition: all 0.3s ease;
+  position: fixed;
+  z-index: 99;
+  padding: 6px;
+  /* width: 90%; */
+  /* margin: 0px auto; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  top: 35px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #e8e8e8
+}
+
+.form-closed{
+  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
+  backdrop-filter: blur(12px); /* Softens the background video/content */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
+  border-radius: 25px;
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.1), /* Outer shadow for depth */
+    inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
+  transition: all 0.3s ease;
+  position: fixed;
+  z-index: 99;
+  padding: 6px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  top: 35px;
+  left: 40px;
+  transform: translate(-50%, -50%);
+  color: #e8e8e8
+}
+
+.cta{
+  padding-top: 80px;
+  width: 90%;
+  margin: 0px auto;
+  font-size: 26px;
+}
+
+.cta-text-container{
+    background: rgba(255, 255, 255, 0.05); /* Very subtle white */
+  backdrop-filter: blur(12px); /* Softens the background video/content */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
+  border-radius: 25px;
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.1), /* Outer shadow for depth */
+    inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
+  transition: all 0.3s ease;
+  padding: 6px
+}
+
+label{
+
+  min-width: 80vw
+}
+
+.search-input{
+  background: transparent;
+  border: none;
+  background: transparent;
+  border-radius: 25px;
+  width:275px;
+  padding: 5px;
+  margin-right: 10px;
+  font-size: 16px;
+  font-family: 'Inter', sans-serif;
+  color: #e8e8e8;
+  font-weight: 500
+}
+
+.search-input:focus{
+  outline: none;
+  background-color: transparent;
+}
+
+.react-video{
+   margin: 0px auto;
+   padding: 0px;
+   padding-left: 0px !important;
+   object-fit: cover;
+   width: 100vw
+}
+
+/* App.css */
+.swiper-slide {
+  /* Make every slide take up the full screen height */
+  /* height: 100vh;  */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Centers vertically */
+  align-items: center;     /* Centers horizontally */
+
+  position: relative;
+}
+
+/* Ensure the player/image doesn't overflow the screen */
+.media-container {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  aspect-ratio: auto; /* Let the media dictate the ratio within limits */
+}
+
+/* For ReactPlayer wrapper */
+.player-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+button:focus{
+  outline: none
+}
+
+.text-container{
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  margin: 12px auto;
+  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
+  backdrop-filter: blur(12px); /* Softens the background video/content */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
+  border-radius: 25px;
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.1), /* Outer shadow for depth */
+    inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
+  transition: all 0.3s ease;
+  padding: 8px;
+  color: #e8e8e8
+}
