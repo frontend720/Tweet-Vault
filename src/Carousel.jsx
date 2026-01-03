@@ -173,7 +173,8 @@ function Carousel() {
               className="image-swiper"
               >
               <Swiper
-              direction="vertical"
+              direction="horizontal"
+              nested={true}
                 pagination={{ clickable: true }}
                 modules={[Pagination, Thumbs]}
                 slidesPerView={1}
