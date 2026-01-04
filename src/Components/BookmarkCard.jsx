@@ -148,15 +148,13 @@ export default function BookmarkCard({
       </div>
       <video
         ref={videoRef}
-        // controls={true}
         style={{
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          //   display: "block"
         }}
         src={post}
-        poster={poster}
+        poster={<img src={poster} width="100vw" />}
       />
     </div>
   );
