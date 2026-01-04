@@ -156,6 +156,7 @@ export default function BookmarkCard({
           //   display: "block"
         }}
         src={post}
+        poster={poster}
       />
     </div>
   );
