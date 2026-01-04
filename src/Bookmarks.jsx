@@ -1,13 +1,20 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { FirebaseContext } from "./FirebaseContext";
-import ReactPlayer from "react-player";
 import BookmarkCard from "./Components/BookmarkCard";
+import "./Bookmarks.css";
+import { AxiosContext } from "./AxiosContext";
 export default function Bookmarks() {
-  const { media } = useContext(FirebaseContext);
+  const { media, deleteTweet } = useContext(FirebaseContext);
+  const {onMenuToggle} = useContext(AxiosContext)
   console.log(media);
+
+  const sortedTweets = media.sort((a, b) => b.timestamp - a.timestamp);
   return (
-    <div>
-      {media.map((item) => (
+    <div className="Bookmark">
+      <div onClick={onMenuToggle} className="menu-toggle">
+        <i class="fa-solid fa-bars"></i>
+      </div>
+      {sortedTweets.map((item) => (
         <BookmarkCard
           key={item?.tweetId || item?.post}
           post={item?.post}
@@ -15,6 +22,9 @@ export default function Bookmarks() {
           fit={item?.fit}
           poster={item?.poster}
           media={item}
+          username={item?.username}
+          timestamp={item?.timestamp}
+          delete_btn={() => deleteTweet(item?.timestamp)}
         />
       ))}
     </div>

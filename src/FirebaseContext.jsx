@@ -1,17 +1,24 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import { db } from "./config";
-import { setDoc, doc, getDocs, collection } from "firebase/firestore";
+import {
+  setDoc,
+  doc,
+  getDocs,
+  collection,
+  where,
+  query,
+  deleteDoc,
+} from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { AxiosContext } from "./AxiosContext";
 
 const FirebaseContext = createContext();
 
 function FirebaseContextProvider({ children }) {
-
-    const {setIndex} = useContext(AxiosContext)
+  const { setIndex } = useContext(AxiosContext);
 
   const [isTweetSaved, setIsTweetSaved] = useState(false);
-  const [media, setMedia] = useState([])
+  const [media, setMedia] = useState([]);
 
   async function saveTweet(post, tweet_id, username, height, fit, poster) {
     const now = new Date();
@@ -22,7 +29,7 @@ function FirebaseContextProvider({ children }) {
       timestamp: now.getTime(),
       height: height,
       fit: fit,
-      poster: poster
+      poster: poster,
     });
     try {
       console.log(response);
@@ -33,8 +40,8 @@ function FirebaseContextProvider({ children }) {
   }
 
   async function getTweets() {
-      const media = [];
-      setIndex(0)
+    const media = [];
+    setIndex(0);
     const querySnapshot = await getDocs(collection(db, "doccnasty@gmail.com"));
     try {
       querySnapshot.forEach((tweet) => {
@@ -46,13 +53,32 @@ function FirebaseContextProvider({ children }) {
     }
   }
 
-//   console.log(media)
+  const [deleteState, setDeleteState] = useState()
+  async function deleteTweet(timestamp) {
+    const collectionRef = collection(db, "doccnasty@gmail.com");
+    const q = query(collectionRef, where("timestamp", "==", timestamp));
+
+    const querySnapshot = await getDocs(q);
+    try {
+      querySnapshot.forEach((query) => {
+        const deleteRef = deleteDoc(query.ref);
+        try {
+          setDeleteState(deleteRef);
+          console.log(deleteRef)
+        } catch (error) {
+          console.log(error);
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   useEffect(() => {
     getTweets();
-  }, [isTweetSaved]);
+  }, [isTweetSaved, deleteState]);
   return (
-    <FirebaseContext.Provider value={{ saveTweet, media }}>
+    <FirebaseContext.Provider value={{ saveTweet, media, deleteTweet }}>
       {children}
     </FirebaseContext.Provider>
   );

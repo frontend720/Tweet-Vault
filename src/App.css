@@ -1,9 +1,15 @@
+:root {
+  /* This ensures your header doesn't actually hide behind the notch */
+  --safe-area-top: env(safe-area-inset-top);
+}
+
 #root {
 max-width: 100%;
   margin: 0 auto;
   text-align: center;
 }
 .App{
+  /* padding-top: calc(10px + var(--safe-area-top)); */
   background-color: #444444;
   color: #e8e8e8;
   min-height: 100vh;

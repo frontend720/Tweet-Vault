@@ -1,0 +1,51 @@
+.bookmark-username {
+  padding: 0px;
+  margin: 0px;
+}
+
+.delete-btn {
+  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
+  backdrop-filter: blur(12px); /* Softens the background video/content */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
+  border-radius: 25px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1),
+    /* Outer shadow for depth */ inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
+  transition: all 0.3s ease;
+  padding: 16px
+}
+
+.bookmark-card{
+    border-top-width: 4px;
+    border-bottom-width: 4px;
+    border-color: #222222;
+    width: 100vw !important
+}
+
+.play-btn{
+    background: rgba(255, 255, 255, 0.05); /* Very subtle white */
+  backdrop-filter: blur(12px); /* Softens the background video/content */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
+  border-radius: 25px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1),
+    /* Outer shadow for depth */ inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
+  transition: all 0.3s ease;
+  width: auto;
+  /* display: inline; */
+  /* padding: 6px; */
+  /* width: 35px !important; */
+  width: 300px;
+  height: 30px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 6px 16px
+  /* display: flex; */
+  
+}
+
+.time{
+    border: 1px solid;
+    width: 30px
+}

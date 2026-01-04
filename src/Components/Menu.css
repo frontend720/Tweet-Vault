@@ -1,0 +1,34 @@
+.close-button {
+  text-align: right;
+  font-size: 24px;
+  padding: 15px;
+  color: #e8e8e8db;
+}
+
+.nav-item {
+  font-size: 30px;
+  padding: 18px;
+  color: #e8e8e8db;
+}
+
+.nav-item-selected {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1),
+    inset 0 0 10px rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+  padding: 18px;
+  color: #9d9d9d;
+  font-size: 30px;
+  text-align: right;
+}
+
+.Menu{
+    text-align :left;
+    width: 100vw;
+    top: 0;
+    background: #444444;
+    height: 100vh
+}

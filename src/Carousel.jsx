@@ -23,6 +23,8 @@ function Carousel() {
     onInputVisibilityButton,
     changeDirection,
     retweetRequest,
+    newRetweetRequest,
+    onMenuToggle
   } = useContext(AxiosContext);
 
   const { saveTweet, media } = useContext(FirebaseContext);
@@ -140,17 +142,25 @@ function Carousel() {
           </button>
         </div>
       </form>
+        <div onClick={onMenuToggle} className="menu-toggle">
+          <i class="fa-solid fa-bars"></i>
+        </div>
       <div
         style={tweets.length === 0 ? { display: "" } : { display: "none" }}
         className="cta"
       >
+        {!newRetweetRequest ? 
+        
         <div className="cta-text-container">
           <label>
-            Ready to browse? Type a handle like (
-            <span ref={accountRef}>@{accounts[accountIndex]}</span>) to see
-            their videos and photos.
+            
+             Ready to browse? Type a handle like (
+             <span ref={accountRef}>@{accounts[accountIndex]}</span>) to see
+             their videos and photos.
           </label>
         </div>
+         : "Loading"
+      }
       </div>
       <Swiper
         onSlideChange={changeDirection}
@@ -159,7 +169,7 @@ function Carousel() {
         slidesPerView={1}
         autoHeight={true}
         style={
-          mediaArray?.length === 0
+          mediaArray?.length === 0 || newRetweetRequest
             ? { display: "none" }
             : { display: "block", minWidth: "100vw" }
         }
