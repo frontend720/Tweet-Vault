@@ -154,7 +154,7 @@ export default function BookmarkCard({
           objectFit: "cover",
         }}
         src={post}
-        poster={<img src={poster} width="100vw" />}
+        poster={poster}
       />
     </div>
   );
