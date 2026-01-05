@@ -7,21 +7,8 @@ import { useNavigate } from "react-router";
 export default function Bookmarks() {
   const { media, deleteTweet } = useContext(FirebaseContext);
   const { onMenuToggle, retweetRequest } = useContext(AxiosContext);
-  const [date, setDate] = useState();
-
+  
   const sortedTweets = media.sort((a, b) => b.timestamp - a.timestamp);
-
-  const tweet_dates = sortedTweets.map((tweet) => tweet);
-
-  useEffect(() => {
-    if (tweet_dates.tweet_creation_date !== null) {
-      setDate(tweet_dates.tweet_creation_date);
-    } else if (tweet_dates.tweet_timestamp !== null) {
-      setDate(tweet_dates.tweet_timestamp);
-    } else {
-      setDate(tweet_dates.timestamp);
-    }
-  }, [sortedTweets]);
 
   const navigation = useNavigate();
   return (
