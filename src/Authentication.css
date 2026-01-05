@@ -1,0 +1,117 @@
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: #444444; /* Dark background matches the Vault vibe */
+  overflow: hidden;
+}
+
+.authentication-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px; /* Spacing between inputs */
+  width: 70% !important;
+  padding: 40px;
+  
+  /* THE GLASS EFFECT (Ported from your Carousel.css) */
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2), 
+              inset 0 0 10px rgba(255, 255, 255, 0.05);
+  border-radius: 25px;
+  
+  /* Start invisible for GSAP */
+  opacity: 0; 
+  transform: translateY(20px);
+}
+
+.app-image{
+    opacity: 0
+}
+
+.app-name {
+  color: #e8e8e8;
+  font-family: 'Inter', sans-serif; /* Assuming you use Inter or similar */
+  font-weight: 800;
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+
+/* Styled Inputs */
+.auth-input {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 50px; /* Pill shape */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  color: #e8e8e8;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.auth-input:focus {
+  border-color: #1da1f2; /* Twitter Blue accent on focus */
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Primary Button */
+.auth-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 50px;
+  border: none;
+  background: #e8e8e8;
+  color: #111;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.auth-btn:hover {
+  transform: scale(1.02);
+}
+
+.auth-btn:active {
+  transform: scale(0.95);
+}
+
+/* Secondary Button (Google) */
+.google-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #e8e8e8;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.google-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Toggle Link */
+.toggle-label {
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: color 0.3s ease;
+}
+
+.toggle-label:hover {
+  color: #e8e8e8;
+  text-decoration: underline;
+}
+
+.app-image{
+    height: 175px
+}

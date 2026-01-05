@@ -9,7 +9,16 @@ import {
   query,
   deleteDoc,
 } from "firebase/firestore";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signOut,
+  signInWithPopup,
+} from "firebase/auth";
 import { v4 as uuidv4 } from "uuid";
+import { auth } from "./config";
 import { AxiosContext } from "./AxiosContext";
 
 const FirebaseContext = createContext();
@@ -19,10 +28,108 @@ function FirebaseContextProvider({ children }) {
 
   const [isTweetSaved, setIsTweetSaved] = useState(false);
   const [media, setMedia] = useState([]);
+  const [authenticatedUser, setAuthenticatedUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem("authenticated-user");
+      return savedUser !== null ? JSON.parse(savedUser) : null;
+    } catch (error) {
+      console.log(error);
+    }
+    return null;
+  });
 
-  async function saveTweet(post, tweet_id, username, height, fit, poster) {
+  const [error, setError] = useState("");
+
+  const [authentication, setAuthentication] = useState({
+    email: "",
+    password: "",
+  });
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setAuthentication((prevAuth) => ({
+      ...prevAuth,
+      [name]: value,
+    }));
+  }
+
+  const [authState, setAuthState] = useState(null);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
+        setAuthState(user.email);
+        setAuthenticatedUser(user.email);
+        localStorage.setItem("authenticated-user", JSON.stringify(user.email));
+      } else {
+        // User is signed out
+        setAuthState(null);
+        setAuthenticatedUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  async function createUser() {
+    const authReference = await createUserWithEmailAndPassword(
+      auth,
+      authentication.email,
+      authentication.password
+    );
+    try {
+      if ((authentication.email, authentication.password)) {
+        setAuthenticatedUser(authReference.user.email);
+      }
+    } catch (error) {
+      if (error === "auth/invalid-email") {
+        setError("Must provide an E-mail to continue");
+        console.log(error);
+      }
+    }
+  }
+
+  async function returningUser() {
+    const authReference = await signInWithEmailAndPassword(
+      auth,
+      authentication.email,
+      authentication.password
+    );
+    try {
+      if (authentication.email || authentication.password) {
+        setAuthenticatedUser(authReference.user.email);
+      }
+    } catch (error) {
+      console.log(error);
+      if (error === "auth/invalid-email") {
+        setError("Must provide an E-mail to continue");
+        console.log(error);
+      }
+    }
+  }
+
+  console.log(authenticatedUser);
+
+  const provider = new GoogleAuthProvider();
+  async function signInWithGoogle() {
+    const authProvider = await signInWithPopup(auth, provider);
+    try {
+      console.log(authProvider.user.email);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function logout() {
+    const authReference = await signOut(auth);
+    try {
+      console.log(authReference);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async function saveTweet(post, tweet_id, username, height, fit, poster, retweet_username, tweet_creation_timestamp, tweet_timestamp) {
     const now = new Date();
-    const response = await setDoc(doc(db, "doccnasty@gmail.com", uuidv4()), {
+    const response = await setDoc(doc(db, authenticatedUser, uuidv4()), {
       post: post,
       username: username,
       tweetId: tweet_id,
@@ -30,6 +137,9 @@ function FirebaseContextProvider({ children }) {
       height: height,
       fit: fit,
       poster: poster,
+      retweet_username:  retweet_username || null,
+      tweet_creation_timestamp: tweet_creation_timestamp || null,
+      tweet_timestamp: tweet_timestamp || null
     });
     try {
       console.log(response);
@@ -42,7 +152,8 @@ function FirebaseContextProvider({ children }) {
   async function getTweets() {
     const media = [];
     setIndex(0);
-    const querySnapshot = await getDocs(collection(db, "doccnasty@gmail.com"));
+    if (!authenticatedUser) return;
+    const querySnapshot = await getDocs(collection(db, authenticatedUser));
     try {
       querySnapshot.forEach((tweet) => {
         media.push(tweet.data());
@@ -53,10 +164,10 @@ function FirebaseContextProvider({ children }) {
     }
   }
 
-  const [deleteState, setDeleteState] = useState()
-  async function deleteTweet(timestamp) {
-    const collectionRef = collection(db, "doccnasty@gmail.com");
-    const q = query(collectionRef, where("timestamp", "==", timestamp));
+  const [deleteState, setDeleteState] = useState();
+  async function deleteTweet(tweetId) {
+    const collectionRef = collection(db, authenticatedUser);
+    const q = query(collectionRef, where("tweetId", "==", tweetId));
 
     const querySnapshot = await getDocs(q);
     try {
@@ -64,7 +175,7 @@ function FirebaseContextProvider({ children }) {
         const deleteRef = deleteDoc(query.ref);
         try {
           setDeleteState(deleteRef);
-          console.log(deleteRef)
+          console.log(deleteRef);
         } catch (error) {
           console.log(error);
         }
@@ -76,9 +187,25 @@ function FirebaseContextProvider({ children }) {
 
   useEffect(() => {
     getTweets();
-  }, [isTweetSaved, deleteState]);
+  }, [isTweetSaved, deleteState, authenticatedUser]);
+
   return (
-    <FirebaseContext.Provider value={{ saveTweet, media, deleteTweet }}>
+    <FirebaseContext.Provider
+      value={{
+        saveTweet,
+        media,
+        deleteTweet,
+        createUser,
+        handleChange,
+        authentication,
+        returningUser,
+        signInWithGoogle,
+        authState,
+        logout,
+        authenticatedUser,
+        error,
+      }}
+    >
       {children}
     </FirebaseContext.Provider>
   );

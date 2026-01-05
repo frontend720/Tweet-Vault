@@ -6,9 +6,10 @@
 }
 
 .nav-item {
-  font-size: 30px;
+  font-size: 24px;
   padding: 18px;
   color: #e8e8e8db;
+  opacity: 1 !important;
 }
 
 .nav-item-selected {
@@ -21,14 +22,40 @@
   transition: all 0.3s ease;
   padding: 18px;
   color: #9d9d9d;
-  font-size: 30px;
-  text-align: right;
+  font-size: 24px;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  /* text-align: right; */
 }
+
+.nav-list-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100px;
+}
+
+.nav-item-spacing {
+  margin-left: 10px;
+  color: #e8e8e8;
+  opacity: 1 !important
+}
+
+.inner-nav {
+  opacity: 0;
+}
+
+#icon {
+  transform: rotate(0deg);
+}
+
 
 .Menu{
     text-align :left;
     width: 100vw;
     top: 0;
-    background: #444444;
-    height: 100vh
+    background: #444444 !important;
+    height: 100vh;
+    position: fixed;
+    z-index:199
 }

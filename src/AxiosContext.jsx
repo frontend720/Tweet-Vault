@@ -54,23 +54,27 @@ function AxiosContextProvider({ children }) {
   }
 
   async function getTweets(e) {
+    setUsername("")
+    setTweets([])
+    setIndex(0)
+    setContinuationToken(undefined)
     e.preventDefault();
-    const response = await axios({
-      method: "GET",
-      url: "https://twitter154.p.rapidapi.com/user/tweets",
-      params: {
-        username: username,
-        limit: 20,
-        include_replies: false,
-        include_pinned: false,
-      },
-      headers: {
-        "x-rapidapi-key": import.meta.env.VITE_TWITTER_API_KEY,
-        "x-rapidapi-host": "twitter154.p.rapidapi.com",
-      },
-    });
     try {
-      setTweets(response?.data?.results);
+      const response = await axios({
+        method: "GET",
+        url: "https://twitter154.p.rapidapi.com/user/tweets",
+        params: {
+          username: username,
+          limit: 20,
+          include_replies: false,
+          include_pinned: false,
+        },
+        headers: {
+          "x-rapidapi-key": import.meta.env.VITE_TWITTER_API_KEY,
+          "x-rapidapi-host": "twitter154.p.rapidapi.com",
+        },
+      });
+      setTweets(response?.data?.results || []);
       setContinuationToken(response?.data?.continuation_token);
       setUsername(response?.data?.results[0]?.user?.username);
       setIsInputVisible(false);
@@ -80,12 +84,15 @@ function AxiosContextProvider({ children }) {
     // setTweets([])
   }
 
+  const isFetching = useRef(false);
+
   async function retweetRequest(retweeted_from) {
     setTweets([]);
     setUsername("");
     setIndex(0);
     setRunRequest(true);
     setNewRetweetRequest(true);
+    setContinuationToken(undefined)
     const response = await axios({
       method: "GET",
       url: "https://twitter154.p.rapidapi.com/user/tweets",
@@ -112,7 +119,6 @@ function AxiosContextProvider({ children }) {
   }
 
   const [runRequest, setRunRequest] = useState(true);
-  const isFetching = useRef(false);
   useEffect(() => {
     const threshold = tweets.length > 0 ? tweets.length - 5 : 14;
     if (runRequest === false || tweets.length < 1 || isFetching.current) {
@@ -134,7 +140,7 @@ function AxiosContextProvider({ children }) {
     })
       .then((response) => {
         setTweets((prevTweets) => [
-          ...prevTweets,
+          ...(prevTweets || []),
           ...(response.data.results || []),
         ]);
         setContinuationToken(response?.data.continuation_token);

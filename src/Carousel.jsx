@@ -24,18 +24,26 @@ function Carousel() {
     changeDirection,
     retweetRequest,
     newRetweetRequest,
-    onMenuToggle
+    onMenuToggle,
   } = useContext(AxiosContext);
 
-  const { saveTweet, media } = useContext(FirebaseContext);
+  // console.log(tweets);
 
+  const { saveTweet, media, deleteTweet } = useContext(FirebaseContext);
+  const [isBookmarked, setIsBookmarked] = useState(false)
   const uniqueMediaMap = new Map();
+
+  function onBookMarkChange(){
+    setIsBookmarked((prev) => !prev)
+  }
 
   tweets.forEach((tweet) => {
     const hasMedia = tweet.video_url !== null || tweet.media_url !== null;
 
     if (hasMedia) {
       uniqueMediaMap.set(tweet.tweet_id, tweet);
+    } else {
+      return;
     }
   });
 
@@ -74,7 +82,7 @@ function Carousel() {
     }
   }, [accountIndex]);
 
-  // console.log(media);
+  console.log(tweets)
 
   return (
     <div className="App">
@@ -142,25 +150,28 @@ function Carousel() {
           </button>
         </div>
       </form>
-        <div onClick={onMenuToggle} className="menu-toggle">
-          <i class="fa-solid fa-bars"></i>
-        </div>
+      <div
+        style={isInputVisible ? { display: "none" } : { display: "" }}
+        onClick={onMenuToggle}
+        className="menu-toggle"
+      >
+        <i style={{ color: "#e8e8e8bc" }} class="fa-solid fa-bars"></i>
+      </div>
       <div
         style={tweets.length === 0 ? { display: "" } : { display: "none" }}
         className="cta"
       >
-        {!newRetweetRequest ? 
-        
-        <div className="cta-text-container">
-          <label>
-            
-             Ready to browse? Type a handle like (
-             <span ref={accountRef}>@{accounts[accountIndex]}</span>) to see
-             their videos and photos.
-          </label>
-        </div>
-         : "Loading"
-      }
+        {!newRetweetRequest ? (
+          <div className="cta-text-container">
+            <label>
+              Ready to browse? Type a handle like (
+              <span ref={accountRef}>@{accounts[accountIndex]}</span>) to see
+              their videos and photos.
+            </label>
+          </div>
+        ) : (
+          "Loading"
+        )}
       </div>
       <Swiper
         onSlideChange={changeDirection}
@@ -296,27 +307,36 @@ function Carousel() {
                   }
                   htmlFor=""
                 >
+                  <label htmlFor="" onClick={onBookMarkChange}>
+
                   <i
                     style={
                       isLiked
                         ? { textAlign: "right", color: "red" }
                         : { textAlign: "right" }
                     }
-                    onClick={() =>
-                      saveTweet(
-                        tweet?.video_url[tweet?.video_url?.length - 1].url,
-                        tweet?.tweet_id,
-                        tweet?.user?.username,
-                        tweet?.extended_entities?.media[0]?.sizes?.small?.h,
-                        tweet?.extended_entities?.media[0]?.sizes?.small
-                          ?.resize,
-                        tweet.extended_entities?.media?.[0]?.media_url_https
-                      )
-                    }
+                    onClick={() => {
+                  if (isLiked) {
+                    deleteTweet(tweet?.tweet_id);
+                  } else {
+                    saveTweet(
+                      tweet?.video_url[tweet?.video_url?.length - 1].url,
+                      tweet?.tweet_id,
+                      tweet?.user?.username,
+                      tweet?.extended_entities?.media[0]?.sizes?.small?.h,
+                      tweet?.extended_entities?.media[0]?.sizes?.small?.resize,
+                      tweet.extended_entities?.media?.[0]?.media_url_https,
+                      tweet?.retweet_status?.user?.username,
+                      tweet?.retweet_status?.creation_date,
+                      tweet?.creation_date
+                    );
+                  }
+                }}
                     class={
                       isLiked ? "fa-solid fa-heart" : "fa-regular fa-heart"
                     }
                   ></i>
+                  </label>
                 </label>
               </div>
             </SwiperSlide>

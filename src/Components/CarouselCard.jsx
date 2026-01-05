@@ -9,6 +9,8 @@ export const CarouselCard = memo(({ tweet, tweetIdStyle }) => {
   const rawHeight = tweet?.extended_entities?.media?.[0]?.sizes?.small?.h;
   const cardHeight = rawHeight ? `${rawHeight}px` : "400px";
 
+  
+
   return (
     <div style={tweetIdStyle} className="card">
         <div style={tweet.video_url === null ? {display: "none"}:{ 
@@ -21,7 +23,7 @@ export const CarouselCard = memo(({ tweet, tweetIdStyle }) => {
         playing={isPlaying}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
+        // onEnded={() => setIsPlaying(false)}
         className="react-video"
         playsInline={true}
         width="100%"
