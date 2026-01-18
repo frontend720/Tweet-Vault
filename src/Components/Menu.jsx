@@ -6,7 +6,7 @@ import "./Menu.css";
 import { FirebaseContext } from "../FirebaseContext";
 import { useNavigate } from "react-router-dom";
 
-export default function App() {
+export default function Menu() {
   const { onMenuToggle, menuToggle } = useContext(AxiosContext);
   const { logout } = useContext(FirebaseContext);
   const [selectedTab, setSelectedTab] = useState(null);
@@ -105,7 +105,7 @@ export default function App() {
       <nav className="nav-wrapper">
         <div ref={navVisibilityRef} className="inner-nav">
           <div className="close-button" onClick={menuAnimation}>
-            <i id="icon" className="fa-solid fa-xmark"></i>
+            <i style={{marginTop: "7%"}} id="icon" className="fa-solid fa-xmark"></i>
           </div>
           <Link to="/">
             <div

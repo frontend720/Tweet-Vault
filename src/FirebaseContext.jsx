@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext, memo } from "react";
 import { db } from "./config";
 import {
   setDoc,
@@ -20,10 +20,11 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { auth } from "./config";
 import { AxiosContext } from "./AxiosContext";
+import  debounce  from "lodash.debounce";
 
 const FirebaseContext = createContext();
 
-function FirebaseContextProvider({ children }) {
+const FirebaseContextProvider = (({ children }) => {
   const { setIndex } = useContext(AxiosContext);
 
   const [isTweetSaved, setIsTweetSaved] = useState(false);
@@ -70,7 +71,8 @@ function FirebaseContextProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  async function createUser() {
+  async function createUser(e) {
+    e.preventDefault()
     const authReference = await createUserWithEmailAndPassword(
       auth,
       authentication.email,
@@ -88,7 +90,8 @@ function FirebaseContextProvider({ children }) {
     }
   }
 
-  async function returningUser() {
+  async function returningUser(e) {
+    e.preventDefault()
     const authReference = await signInWithEmailAndPassword(
       auth,
       authentication.email,
@@ -107,7 +110,7 @@ function FirebaseContextProvider({ children }) {
     }
   }
 
-  console.log(authenticatedUser);
+//   console.log(authenticatedUser);
 
   const provider = new GoogleAuthProvider();
   async function signInWithGoogle() {
@@ -184,8 +187,8 @@ function FirebaseContextProvider({ children }) {
       console.log(error);
     }
   }
-
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     getTweets();
   }, [isTweetSaved, deleteState, authenticatedUser]);
 
@@ -209,6 +212,6 @@ function FirebaseContextProvider({ children }) {
       {children}
     </FirebaseContext.Provider>
   );
-}
+})
 
 export { FirebaseContext, FirebaseContextProvider };

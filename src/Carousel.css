@@ -28,6 +28,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   color: #e8e8e8;
+  margin-top: 10%;
 }
 
 .form-closed {
@@ -49,6 +50,7 @@
   left: 40px;
   transform: translate(-50%, -50%);
   color: #e8e8e8;
+  margin-top: 10%;
 }
 
 .menu-toggle {
@@ -62,6 +64,7 @@
   transition: all 0.3s ease;
   position: fixed;
   z-index: 99;
+  margin-top: 10%;
 
   top: 10px;
   right: 6px;
@@ -69,6 +72,7 @@
   padding: 6px;
   width: 52px;
   font-size: 24px;
+  color: #e8e8e8bc;
 }
 
 .cta {
@@ -89,6 +93,7 @@
   transition: all 0.3s ease;
   padding: 6px;
   color: #e8e8e8;
+  margin-top: 15%;
 }
 
 span {
@@ -116,6 +121,72 @@ label {
 .search-input:focus {
   outline: none;
   background-color: transparent;
+}
+
+.search-input-container {
+  display: flex;
+  margin: 0px auto;
+}
+
+.in-widget-search-input {
+  /* 1. Darker background creates the 'embedded' look */
+  background: rgba(0, 0, 0, 0.25);
+
+  /* 2. Lower blur than the parent to reduce visual noise */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  /* 3. Subtle border that matches your BookmarkCard.css style */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 25px;
+  font-size: 16px;
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+
+  /* 4. Sizing and text */
+  padding: 12px 16px;
+  color: #e8e8e8;
+  outline: none;
+  width: 80%;
+  transition: all 0.3s ease;
+}
+
+.in-widget-search-input:focus {
+  /* Increase opacity on focus to show it is active */
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.in-widget-search-btn {
+  background: rgba(255, 255, 255, 0.1); /* Brighter glass for action */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px 12px;
+  color: #e8e8e8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  margin-left: 10px;
+}
+
+.in-widget-search-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.in-widget-search-btn:active {
+  transform: translateY(1px);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* FontAwesome icon styling within the button */
+.in-widget-search-btn i {
+  font-size: 16px;
 }
 
 .react-video {
@@ -158,7 +229,7 @@ button:focus {
 }
 
 .text-container {
-  width: 90%;
+  width: 93%;
   display: flex;
   flex-direction: column;
   text-align: left;
@@ -171,7 +242,7 @@ button:focus {
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1),
     /* Outer shadow for depth */ inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
   transition: all 0.3s ease;
-  padding: 8px;
+  padding: 8px !important;
   color: #e8e8e8;
 }
 
@@ -180,4 +251,30 @@ button:focus {
 }
 .swiper-pagination-bullet-active {
   background: #444444 !important;
+}
+
+.loading-container {
+  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
+  backdrop-filter: blur(12px); /* Softens the background video/content */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
+  border-radius: 25px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1),
+    /* Outer shadow for depth */ inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  width: 100px;
+  position: absolute;
+  padding: 5px;
+  border-radius: 25px;
+}
+
+.dot {
+  width: 15px;
+  height: 15px !important;
+  background: #00000069;
+  border-radius: 25px;
+  margin: 0px 5px;
 }

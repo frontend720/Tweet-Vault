@@ -1,3 +1,13 @@
 .Bookmark{
-    background: #444444
+    background: #444444 !important
+}
+
+.top-image{
+    filter: blur(10px);
+    height: 60px;
+    object-fit: cover;
+}
+
+.bookmark-menu-toggle{
+    margin-top: 5% !important
 }

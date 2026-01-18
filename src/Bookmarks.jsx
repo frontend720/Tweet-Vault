@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext } from "react";
 import { FirebaseContext } from "./FirebaseContext";
 import BookmarkCard from "./Components/BookmarkCard";
 import "./Bookmarks.css";
@@ -7,31 +7,31 @@ import { useNavigate } from "react-router";
 export default function Bookmarks() {
   const { media, deleteTweet } = useContext(FirebaseContext);
   const { onMenuToggle, retweetRequest } = useContext(AxiosContext);
-  
-  const sortedTweets = media.sort((a, b) => b.timestamp - a.timestamp);
 
+  const sortedTweets = media.sort((a, b) => b.timestamp - a.timestamp);
+ 
   const navigation = useNavigate();
   return (
     <div className="Bookmark">
-      <div onClick={onMenuToggle} className="menu-toggle">
-        <i class="fa-solid fa-bars"></i>
+      <div onClick={onMenuToggle} className="menu-toggle bookmark-menu-toggle">
+        <i className="fa-solid fa-bars"></i>
       </div>
-      {sortedTweets.map((item) => {
+      {sortedTweets.length === 0 ? "Find some tweets to like first": ""}
+      <img width="100%" className="top-image" src={sortedTweets[0]?.poster} alt="" />
+      {sortedTweets.map((item, index) => {
         const finalDate =
           item.tweet_creation_timestamp ||
           item.tweet_timestamp ||
           item.timestamp;
-
         return (
           <BookmarkCard
-            key={item?.tweetId || item?.post}
+            key={index}
             post={item?.post}
             height={item?.height}
             fit={item?.fit}
             poster={item?.poster}
-            media={item}
+            media={item.post}
             username={item?.retweet_username || item?.username}
-            //   timestamp={item?.tweet_creation_timestamp || item?.tweet_timestamp}
             timestamp={finalDate}
             delete_btn={() => deleteTweet(item?.tweetId)}
             request={() => {

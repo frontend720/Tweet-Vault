@@ -54,7 +54,7 @@ export default function Authentication() {
   return (
     <div className="auth-container">
       {/* We use ref here for GSAP */}
-      <div ref={formRef} className="authentication-form">
+      <form ref={formRef} className="authentication-form">
         <h1 style={{ marginTop: 0 }} className="app-name">
           TweetVault
         </h1>
@@ -73,6 +73,7 @@ export default function Authentication() {
           value={authentication.email}
           onChange={handleChange}
           placeholder="Email"
+          autoComplete="true"
         />
 
         <input
@@ -85,6 +86,7 @@ export default function Authentication() {
           onChange={handleChange}
           placeholder="Password"
           style={{ marginBottom: 0 }}
+          autoComplete="true"
         />
         <label
           onClick={onPasswordVisibilityChange}
@@ -118,7 +120,7 @@ export default function Authentication() {
             ? "Don't have an account? Sign up"
             : "Already have an account? Log in"}
         </label>
-      </div>
+      </form>
     </div>
   );
 }

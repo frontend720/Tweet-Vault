@@ -1,0 +1,63 @@
+.recent-list-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap; /* Wraps to next line if there are too many names */
+  justify-content: center; /* Centers the tags */
+  align-items: center;
+  gap: 12px; /* Space between tags */
+  
+  list-style: none;
+  padding: 0;
+  margin: 24px auto; /* Spacing below the CTA */
+  /* width: 90%; */
+  max-width: 600px;
+  color: #e8e8e8
+}
+
+/* The Glass Pill Button */
+.recent-tag-btn {
+  /* 1. Reset default button styles */
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+  
+  /* 2. The Glass Effect (Matches .card / .form) */
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  
+  /* 3. Shape & Text */
+  border-radius: 50px; /* Pill shape */
+  padding: 10px 20px;
+  color: #e8e8e8; /* Your app's text color */
+  font-family: "Inter", sans-serif; /* Matches your inputs */
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  max-width: 150px;
+  white-space: nowrap;   /* Don't let text wrap to two lines */
+  overflow: hidden;      /* Hide the overflow */
+  text-overflow: ellipsis; /* Add "..." at the end */
+  display: block;        /* Needed for ellipsis to work */
+  text-align: center;
+  margin: 0px auto
+}
+
+/* Hover State */
+.recent-tag-btn:hover {
+  background: rgba(255, 255, 255, 0.15); /* Slightly brighter */
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px); /* Subtle lift */
+}
+
+/* Active/Click State */
+.recent-tag-btn:active {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(0px) scale(0.95); /* Click press effect */
+}
+
+.recent-search-label{
+    padding: 24px
+}

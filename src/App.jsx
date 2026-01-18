@@ -11,15 +11,12 @@ import { FirebaseContext } from "./FirebaseContext";
 export default function App() {
   // 1. Get the toggle state from context
   const { menuToggle } = useContext(AxiosContext);
-  const { authState, logout } = useContext(FirebaseContext);
+  const { authState } = useContext(FirebaseContext);
 
   return (
-    <>
+    <div className="App">
       {menuToggle && <Menu />}
-      <div style={menuToggle ? {display: "none"} : {display: ""}}>
-
-     
-      </div>
+      <div style={menuToggle ? { display: "none" } : { display: "" }}></div>
       {authState == null ? (
         <Authentication />
       ) : (
@@ -28,9 +25,6 @@ export default function App() {
           <Route path="bookmarks" element={<Bookmarks />} />
         </Routes>
       )}
-
-      {/* <Authentication /> */}
-      {/* <Carousel/> */}
-    </>
+    </div>
   );
 }

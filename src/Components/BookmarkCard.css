@@ -19,7 +19,8 @@
   border-top-width: 4px;
   border-bottom-width: 4px;
   border-color: #222222;
-  width: 100vw !important;
+  width: 100vw;
+  max-width: 400px;
 }
 
 .play-btn {

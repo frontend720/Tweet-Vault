@@ -1,24 +1,23 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import ReactPlayer from "react-player";
 import "./BookmarkCard.css";
 
 dayjs.extend(relativeTime);
 
-export default function BookmarkCard({
+function BookmarkCard({
   post,
   poster,
   height,
-  fit,
   username,
   timestamp,
   delete_btn,
   request,
+  key,
 }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const cardHeight = height ? `${height}px` : "450px";
-
-  const videoRef = useRef(null);
 
   // --- STATE MANAGEMENT ---
   const playbackRate = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 1.75, 2];
@@ -31,6 +30,8 @@ export default function BookmarkCard({
   // 2. String values for the UI Text ("0:00")
   const [videoDuration, setVideoDuration] = useState("0:00");
   const [currentVideoPosition, setCurrentVideoPosition] = useState("0:00");
+
+  const videoRef = useRef(null);
 
   function handleEnded() {
     setCurrentVideoPosition("0:00");
@@ -99,8 +100,16 @@ export default function BookmarkCard({
     }
   }
 
+  const [isHovering, setIsHovering] = useState(false);
+
+  function onHoverChange() {
+    setIsHovering((prev) => !prev);
+  }
+
   return (
     <div
+      key={key}
+      onClick={onHoverChange}
       className="card bookmark-card"
       style={{
         width: "100vw",
@@ -111,29 +120,37 @@ export default function BookmarkCard({
     >
       <div
         className="delete-btn"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          margin: 20,
-          zIndex: 99,
-        }}
+        style={
+          isPlaying
+            ? {
+                position: "absolute",
+                top: 0,
+                left: 0,
+                margin: 20,
+                zIndex: 99,
+              }
+            : { display: "none" }
+        }
         onClick={delete_btn}
       >
         <i className="fa-solid fa-trash-can"></i>
       </div>
       <div
         onClick={request}
-        style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          padding: 16,
-          fontWeight: 300,
-          marginBottom: 50,
-          zIndex: 99,
-          cursor: "pointer"
-        }}
+        style={
+          isPlaying
+            ? {
+                position: "absolute",
+                top: 0,
+                right: 0,
+                padding: 16,
+                fontWeight: 300,
+                marginBottom: 50,
+                zIndex: 99,
+                cursor: "pointer",
+              }
+            : { display: "none" }
+        }
       >
         <h4 className="bookmark-username">@{username}</h4>
         <small style={{ textAlign: "right" }}>
@@ -208,11 +225,14 @@ export default function BookmarkCard({
         }}
         src={post}
         poster={poster}
-        onLoadedMetadata={handleLoadedMetadata} // CORRECTED
+        onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
         playsInline={true}
+        loading="lazy"
       />
     </div>
   );
 }
+
+export default BookmarkCard;

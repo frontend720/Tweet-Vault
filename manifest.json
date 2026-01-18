@@ -1,9 +1,10 @@
 {
   "short_name": "Tweet Vault",
   "name": "Full Stack Portfolio Project",
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#444444",
   "orientation": "portrait",
-  "theme_color": "#444444"
+  "theme_color": "#444444",
+  "scope": "/"
 }
