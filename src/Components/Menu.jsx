@@ -25,7 +25,7 @@ export default function Menu() {
         duration: 1,
         x: 0,
         ease: "power2.inOut",
-        overwrite: true
+        overwrite: true,
       });
       if (selectedTab) {
         gsap.to(".nav-item-selected .nav-item-spacing", {
@@ -88,7 +88,7 @@ export default function Menu() {
   const navigation = useNavigate();
   function handleDestination(destination = null) {
     gsap.to(".nav-list-item", {
-      duration: 0.50,
+      duration: 0.5,
       opacity: 0,
       stagger: 0.16,
       onComplete: () => {
@@ -105,7 +105,11 @@ export default function Menu() {
       <nav className="nav-wrapper">
         <div ref={navVisibilityRef} className="inner-nav">
           <div className="close-button" onClick={menuAnimation}>
-            <i style={{marginTop: "7%"}} id="icon" className="fa-solid fa-xmark"></i>
+            <i
+              style={{ marginTop: "7%" }}
+              id="icon"
+              className="fa-solid fa-xmark"
+            ></i>
           </div>
           <Link to="/">
             <div
@@ -147,6 +151,24 @@ export default function Menu() {
                 ></i>
                 <span className="nav-item-spacing">Vault</span>
               </label>
+            </div>
+          </Link>
+          <Link to="/gallery">
+            <div
+              onClick={() => {
+                setSelectedTab("gallery");
+                handleDestination("/gallery");
+              }}
+              className={
+                selectedTab === "bookmarks" ? "nav-item-selected" : "nav-item"
+              }
+              id="item-visibility-stagger"
+            >
+              <i 
+              id="icon" 
+              ref={iconRef} 
+              className="icon fa-solid fa-photo-film"></i>
+              <span className="nav-item-spacing">Photos</span>
             </div>
           </Link>
           <div

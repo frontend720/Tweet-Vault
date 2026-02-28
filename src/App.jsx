@@ -1,8 +1,9 @@
 import "./App.css";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import Bookmarks from "./Bookmarks";
 import Carousel from "./Carousel";
 import Menu from "./Components/Menu"; // Ensure path is correct
+import PhotoGallery from "./PhotoGallery"
 import { AxiosContext } from "./AxiosContext";
 import { Routes, Route } from "react-router-dom";
 import Authentication from "./Authentication";
@@ -23,6 +24,7 @@ export default function App() {
         <Routes>
           <Route index element={<Carousel />} />
           <Route path="bookmarks" element={<Bookmarks />} />
+          <Route path="gallery" element={<PhotoGallery/>} />
         </Routes>
       )}
     </div>

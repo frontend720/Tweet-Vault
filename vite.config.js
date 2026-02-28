@@ -6,6 +6,8 @@ export default defineConfig({
   plugins: [react()],
   build: {
     sourcemap: true, // <--- Add this line
-  }
+  },
+  base: "./"
   // base: process.env.VITE_BASE_PATH || "/"
+
 })

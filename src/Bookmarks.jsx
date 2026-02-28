@@ -4,12 +4,11 @@ import BookmarkCard from "./Components/BookmarkCard";
 import "./Bookmarks.css";
 import { AxiosContext } from "./AxiosContext";
 import { useNavigate } from "react-router";
+
 export default function Bookmarks() {
-  const { media, deleteTweet } = useContext(FirebaseContext);
+  const { deleteTweet, sortedTweets } = useContext(FirebaseContext);
   const { onMenuToggle, retweetRequest } = useContext(AxiosContext);
 
-  const sortedTweets = media.sort((a, b) => b.timestamp - a.timestamp);
- 
   const navigation = useNavigate();
   return (
     <div className="Bookmark">

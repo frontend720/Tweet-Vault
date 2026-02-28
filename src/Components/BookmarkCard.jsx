@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect, memo } from "react";
+import { useState, useRef, useEffect } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import ReactPlayer from "react-player";
 import "./BookmarkCard.css";
 
 dayjs.extend(relativeTime);
@@ -14,24 +13,50 @@ function BookmarkCard({
   timestamp,
   delete_btn,
   request,
-  key,
+  // key is not accessible as a prop in React, removed it here
 }) {
+  // --- LAZY LOAD STATE ---
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const cardRef = useRef(null); // Ref for the container to watch
+
   const [isPlaying, setIsPlaying] = useState(true);
   const cardHeight = height ? `${height}px` : "450px";
 
   // --- STATE MANAGEMENT ---
   const playbackRate = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 1.75, 2];
-  const [rate, setRate] = useState(4); // Default to 1x speed (index 4)
+  const [rate, setRate] = useState(4);
 
-  // 1. Numeric values for the Slider
   const [currentTimeSec, setCurrentTimeSec] = useState(0);
   const [durationSec, setDurationSec] = useState(0);
-
-  // 2. String values for the UI Text ("0:00")
   const [videoDuration, setVideoDuration] = useState("0:00");
   const [currentVideoPosition, setCurrentVideoPosition] = useState("0:00");
 
   const videoRef = useRef(null);
+
+  // --- INTERSECTION OBSERVER SETUP ---
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect(); // Stop watching once loaded to save resources
+        }
+      },
+      {
+        rootMargin: "200px", // Starts loading 200px BEFORE it enters the screen
+        threshold: 0.1,
+      },
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   function handleEnded() {
     setCurrentVideoPosition("0:00");
@@ -43,45 +68,38 @@ function BookmarkCard({
     setRate((prev) => (prev + 1) % playbackRate.length);
   }
 
-  // --- HANDLER 1: SETS TOTAL DURATION (Runs once on load) ---
   const handleLoadedMetadata = () => {
     const video = videoRef.current;
     if (!video) return;
 
     const duration = video.duration;
-    setDurationSec(duration); // Set Slider Max
-
+    setDurationSec(duration);
     const minutes = Math.floor(duration / 60);
     const seconds = Math.floor(duration % 60);
     const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
     setVideoDuration(`${minutes}:${formattedSeconds}`);
   };
 
-  // --- HANDLER 2: UPDATES TIME (Runs every second while playing) ---
   const handleTimeUpdate = () => {
     const video = videoRef.current;
     if (!video) return;
 
     const current = video.currentTime;
-    setCurrentTimeSec(current); // Move Slider Knob
-
+    setCurrentTimeSec(current);
     const minutes = Math.floor(current / 60);
     const seconds = Math.floor(current % 60);
     const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
     setCurrentVideoPosition(`${minutes}:${formattedSeconds}`);
   };
 
-  // --- HANDLER 3: USER SCRUBS SLIDER ---
   const handleScrub = (e) => {
     const video = videoRef.current;
     if (!video) return;
-
     const manualChange = Number(e.target.value);
     video.currentTime = manualChange;
     setCurrentTimeSec(manualChange);
   };
 
-  // Sync Playback Rate
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.playbackRate = playbackRate[rate];
@@ -100,15 +118,17 @@ function BookmarkCard({
     }
   }
 
-  const [isHovering, setIsHovering] = useState(false);
+  const [_________, setIsHovering] = useState(false);
 
   function onHoverChange() {
     setIsHovering((prev) => !prev);
   }
 
+  const proxyURL = `${import.meta.env.VITE_FUNCTION_URL}/proxy?url=${encodeURIComponent(post)}`;
+// console.log(proxyURL)
   return (
     <div
-      key={key}
+      ref={cardRef} // Attach ref here for the observer
       onClick={onHoverChange}
       className="card bookmark-card"
       style={{
@@ -185,7 +205,7 @@ function BookmarkCard({
             flexDirection: "row",
             alignItems: "center",
             gap: 4,
-            width: "100%", // Ensures container takes space
+            width: "100%",
           }}
         >
           <div style={{ minWidth: "35px" }}>{currentVideoPosition}</div>
@@ -223,13 +243,16 @@ function BookmarkCard({
           height: "100%",
           objectFit: "cover",
         }}
-        src={post}
+        // Only insert the src if shouldLoad is true
+        src={shouldLoad ? proxyURL : undefined}
+        referrerPolicy="no-referrer"
         poster={poster}
+        preload={shouldLoad ? "metadata" : "none"} // Double protection
         onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
         playsInline={true}
-        loading="lazy"
+        playing
       />
     </div>
   );

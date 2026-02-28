@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, memo } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { db } from "./config";
 import {
   setDoc,
@@ -20,15 +20,19 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { auth } from "./config";
 import { AxiosContext } from "./AxiosContext";
-import  debounce  from "lodash.debounce";
+import axios from "axios";
+axios.defaults.headers.common["ngrok-skip-browser-warning"] = true;
 
 const FirebaseContext = createContext();
 
-const FirebaseContextProvider = (({ children }) => {
+const FirebaseContextProvider = ({ children }) => {
   const { setIndex } = useContext(AxiosContext);
 
   const [isTweetSaved, setIsTweetSaved] = useState(false);
   const [media, setMedia] = useState([]);
+  const [images, setImages] = useState([]);
+  const [savedImage, setSavedImage] = useState("");
+  const [deleteState, setDeleteState] = useState();
   const [authenticatedUser, setAuthenticatedUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem("authenticated-user");
@@ -72,11 +76,11 @@ const FirebaseContextProvider = (({ children }) => {
   }, []);
 
   async function createUser(e) {
-    e.preventDefault()
+    e.preventDefault();
     const authReference = await createUserWithEmailAndPassword(
       auth,
       authentication.email,
-      authentication.password
+      authentication.password,
     );
     try {
       if ((authentication.email, authentication.password)) {
@@ -91,11 +95,11 @@ const FirebaseContextProvider = (({ children }) => {
   }
 
   async function returningUser(e) {
-    e.preventDefault()
+    e.preventDefault();
     const authReference = await signInWithEmailAndPassword(
       auth,
       authentication.email,
-      authentication.password
+      authentication.password,
     );
     try {
       if (authentication.email || authentication.password) {
@@ -109,8 +113,6 @@ const FirebaseContextProvider = (({ children }) => {
       }
     }
   }
-
-//   console.log(authenticatedUser);
 
   const provider = new GoogleAuthProvider();
   async function signInWithGoogle() {
@@ -130,7 +132,69 @@ const FirebaseContextProvider = (({ children }) => {
       console.log(error);
     }
   }
-  async function saveTweet(post, tweet_id, username, height, fit, poster, retweet_username, tweet_creation_timestamp, tweet_timestamp) {
+
+    const [selectedImage, setSelectedImage] = useState(undefined);
+
+  function imageSelect(index) {
+    console.log(index);
+    setSelectedImage(index);
+  }
+
+    function closeImage() {
+    setSelectedImage(undefined);
+  }
+
+  async function saveImage(imageUrl, id) {
+    const timestamp = Date.now()
+    console.log(imageUrl, id, timestamp);
+    const newPhoto = { imageUrl, tweetId: id, timestamp: timestamp };
+    try {
+      await setDoc(
+        doc(db, "users", authenticatedUser, "photos", uuidv4()),
+        newPhoto,
+      );
+      setImages((prev) => [...prev, newPhoto]);
+
+      console.log("State updated locally!");
+    } catch (error) {
+      console.error("Firebase write failed:", error);
+    }
+  }
+
+  async function getImageGallery() {
+    const response = await getDocs(
+      collection(db, "users", authenticatedUser, "photos"),
+    );
+    const collectionArray = [];
+    try {
+      response.forEach((doc) => {
+        if (!doc) {
+          console.log("no images saved");
+        } else {
+          collectionArray.push(doc.data());
+        }
+      });
+      setImages(collectionArray);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    getImageGallery();
+  }, [savedImage, deleteState]);
+  async function saveTweet(
+    post,
+    tweet_id,
+    username,
+    height,
+    fit,
+    poster,
+    retweet_username,
+    tweet_creation_timestamp,
+    tweet_timestamp,
+  ) {
     const now = new Date();
     const response = await setDoc(doc(db, authenticatedUser, uuidv4()), {
       post: post,
@@ -140,9 +204,9 @@ const FirebaseContextProvider = (({ children }) => {
       height: height,
       fit: fit,
       poster: poster,
-      retweet_username:  retweet_username || null,
+      retweet_username: retweet_username || null,
       tweet_creation_timestamp: tweet_creation_timestamp || null,
-      tweet_timestamp: tweet_timestamp || null
+      tweet_timestamp: tweet_timestamp || null,
     });
     try {
       console.log(response);
@@ -167,7 +231,6 @@ const FirebaseContextProvider = (({ children }) => {
     }
   }
 
-  const [deleteState, setDeleteState] = useState();
   async function deleteTweet(tweetId) {
     const collectionRef = collection(db, authenticatedUser);
     const q = query(collectionRef, where("tweetId", "==", tweetId));
@@ -187,10 +250,37 @@ const FirebaseContextProvider = (({ children }) => {
       console.log(error);
     }
   }
+
+  async function deleteImage(tweetId) {
+    const collectionRef = collection(db, "users", authenticatedUser, "photos");
+    const q = query(collectionRef, where("tweetId", "==", tweetId));
+
+    const querySnapshot = await getDocs(q);
+    try {
+      querySnapshot.forEach((query) => {
+        const deleteRef = deleteDoc(query.ref);
+        try {
+          setSavedImage(deleteRef);
+          setSelectedImage(undefined)
+          console.log(deleteRef);
+        } catch (error) {
+          console.log(error);
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     getTweets();
   }, [isTweetSaved, deleteState, authenticatedUser]);
+
+  const sortedTweets = media.sort((a, b) => b.timestamp - a.timestamp);
+  const sortedImages = images.sort((a, b) => b.timestamp - a.timestamp);
+
+  // Then sort
+  // const sorted = uniqueTweets.sort((a, b) => a.username.localeCompare(b.username));
 
   return (
     <FirebaseContext.Provider
@@ -207,11 +297,19 @@ const FirebaseContextProvider = (({ children }) => {
         logout,
         authenticatedUser,
         error,
+        sortedTweets,
+        saveImage,
+        sortedImages,
+        images,
+        deleteImage,
+        selectedImage,
+        imageSelect,
+        closeImage
       }}
     >
       {children}
     </FirebaseContext.Provider>
   );
-})
+};
 
 export { FirebaseContext, FirebaseContextProvider };
