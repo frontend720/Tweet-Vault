@@ -1,13 +1,25 @@
-.Bookmark{
-    background: #444444 !important
+.Bookmark {
+  background: var(--bg-primary) !important;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-.top-image{
-    filter: blur(10px);
-    height: 60px;
-    object-fit: cover;
+.top-image {
+  filter: blur(10px) brightness(0.35);
+  height: 80px;
+  width: 100%;
+  max-width: 600px;
+  object-fit: cover;
+  display: block;
 }
 
-.bookmark-menu-toggle{
-    margin-top: 5% !important
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (min-width: 640px) {
+  .Bookmark {
+    padding-top: 16px;
+  }
 }

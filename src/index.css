@@ -1,73 +1,128 @@
+/* ── Synapse Design Tokens — Dark (default) ─────────────────────────── */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --bg-primary: #111012;
+  --surface-glass: rgba(255, 255, 255, 0.05);
+  --surface-glass-hover: rgba(255, 255, 255, 0.08);
+  --surface-vault: rgba(255, 255, 255, 0.04);
+  --surface-card: #1c1b1f;
+  --surface-card-hover: #242328;
+  --pulse-start: #00f2ff;
+  --pulse-end: #7000ff;
+  --pulse-gradient: linear-gradient(135deg, #00f2ff, #7000ff);
+  --decay-warn: #ffb800;
+  --text-primary: #f5f5f7;
+  --text-secondary: #b4b4be;
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-card: rgba(255, 255, 255, 0.1);
+  --border-hot: rgba(0, 242, 255, 0.3);
+  /* Video control overlays — hardcoded dark in BookmarkCard */
+  --overlay-controls: rgba(14, 13, 16, 0.92);
+  --font-heading: 'Archivo', 'Inter Tight', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius-micro: 4px;
+  --radius-sm: 8px;
+  --radius-card: 12px;
+  --radius-container: 20px;
+  --radius-dock: 28px;
+  --safe-area-top: env(safe-area-inset-top);
+  --safe-area-bottom: env(safe-area-inset-bottom);
+}
+
+/* ── Light Mode Overrides ───────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-primary: #f5f5f7;
+  --surface-glass: rgba(0, 0, 0, 0.04);
+  --surface-glass-hover: rgba(0, 0, 0, 0.07);
+  --surface-vault: rgba(0, 0, 0, 0.02);
+  --surface-card: #ffffff;
+  --surface-card-hover: #ebebf0;
+  --text-primary: #111012;
+  --text-secondary: #5a5a6e;
+  --border-glass: rgba(0, 0, 0, 0.08);
+  --border-card: rgba(0, 0, 0, 0.12);
+  --border-hot: rgba(0, 160, 185, 0.45);
+  --overlay-controls: rgba(255, 255, 255, 0.94);
+  color-scheme: light;
+}
+
+[data-theme="light"] body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  color-scheme: light;
+}
+
+/* ── Global Reset ───────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  overscroll-behavior-y: none;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  /* background-color: #242424; */
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-*{
-  overscroll-behavior-y: none;
+  color-scheme: dark;
+  min-height: 100vh;
 }
 
 a {
+  color: var(--pulse-start);
+  text-decoration: none;
   font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
 }
+
 a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  overscroll-behavior-y: none;
-  /* min-width: 320px; */
-  /* min-height: 100vh; */
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  color: var(--pulse-end);
 }
 
 button {
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+  padding: 0.5em 1em;
+  font-size: 0.9375rem;
   font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  font-family: var(--font-body);
+  background-color: transparent;
+  color: var(--text-primary);
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: all 0.2s ease;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
+button:hover {
+  border-color: var(--border-glass);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid var(--pulse-start);
+  outline-offset: 2px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
   button {
-    background-color: #f9f9f9;
+    transition: none;
   }
 }

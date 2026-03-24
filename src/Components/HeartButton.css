@@ -1,0 +1,24 @@
+.heart-btn {
+  display: inline-block; /* transform requires block or inline-block */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@keyframes heart-pop {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.5);  color: #ff4d6d; }
+  55%  { transform: scale(0.88); color: #ff4d6d; }
+  80%  { transform: scale(1.18); color: #ff4d6d; }
+  100% { transform: scale(1);    color: #ff4d6d; }
+}
+
+.heart-btn--pop {
+  animation: heart-pop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart-btn--pop {
+    animation: none;
+    color: #ff4d6d;
+  }
+}

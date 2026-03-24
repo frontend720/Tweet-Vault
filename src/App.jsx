@@ -1,31 +1,44 @@
 import "./App.css";
-import { useContext, useEffect } from "react";
-import Bookmarks from "./Bookmarks";
-import Carousel from "./Carousel";
-import Menu from "./Components/Menu"; // Ensure path is correct
-import PhotoGallery from "./PhotoGallery"
-import { AxiosContext } from "./AxiosContext";
+import { useContext, lazy, Suspense, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Authentication from "./Authentication";
-import { FirebaseContext } from "./FirebaseContext";
+import { AuthContext } from "./AuthContext";
+import CommandDock from "./Components/CommandDock";
+import Onboarding from "./Components/Onboarding";
+
+const Carousel     = lazy(() => import("./Carousel"));
+const Bookmarks    = lazy(() => import("./Bookmarks"));
+const PhotoGallery = lazy(() => import("./PhotoGallery"));
 
 export default function App() {
-  // 1. Get the toggle state from context
-  const { menuToggle } = useContext(AxiosContext);
-  const { authState } = useContext(FirebaseContext);
+  const { authenticatedUser } = useContext(AuthContext);
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => !localStorage.getItem("tv_onboarded"),
+  );
+
+  function dismissOnboarding() {
+    localStorage.setItem("tv_onboarded", "1");
+    setShowOnboarding(false);
+  }
 
   return (
     <div className="App">
-      {menuToggle && <Menu />}
-      <div style={menuToggle ? { display: "none" } : { display: "" }}></div>
-      {authState == null ? (
+      {authenticatedUser == null ? (
         <Authentication />
       ) : (
-        <Routes>
-          <Route index element={<Carousel />} />
-          <Route path="bookmarks" element={<Bookmarks />} />
-          <Route path="gallery" element={<PhotoGallery/>} />
-        </Routes>
+        <>
+          {showOnboarding && <Onboarding onDismiss={dismissOnboarding} />}
+          <div className="page-content">
+            <Suspense fallback={null}>
+              <Routes>
+                <Route index element={<Carousel />} />
+                <Route path="bookmarks" element={<Bookmarks />} />
+                <Route path="gallery" element={<PhotoGallery />} />
+              </Routes>
+            </Suspense>
+          </div>
+          <CommandDock />
+        </>
       )}
     </div>
   );

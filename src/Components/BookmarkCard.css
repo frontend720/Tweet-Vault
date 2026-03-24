@@ -1,88 +1,200 @@
-.bookmark-username {
-  padding: 0px;
-  margin: 0px;
+/* Overlay elements fade in/out smoothly */
+.video-overlay {
+  transition: opacity 0.25s ease;
 }
 
-.delete-btn {
-  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
-  backdrop-filter: blur(12px); /* Softens the background video/content */
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
-  border-radius: 25px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1),
-    /* Outer shadow for depth */ inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
-  transition: all 0.3s ease;
-  padding: 16px;
+.bookmark-username {
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
 }
 
 .bookmark-card {
-  border-top-width: 4px;
-  border-bottom-width: 4px;
-  border-color: #222222;
-  width: 100vw;
-  max-width: 400px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  border-top: 1px solid var(--border-glass);
 }
 
+/* Delete button — top-left overlay */
+.delete-btn {
+  background: var(--overlay-controls);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  padding: 12px 14px;
+  color: var(--text-secondary);
+}
+
+.delete-btn:hover {
+  background: rgba(255, 77, 77, 0.2);
+  border-color: rgba(255, 77, 77, 0.4);
+  color: #ff4d4d;
+}
+
+/* Play controls bar — bottom overlay */
 .play-btn {
-  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
-  backdrop-filter: blur(12px); /* Softens the background video/content */
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
-  border-radius: 25px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1),
-    /* Outer shadow for depth */ inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
-  transition: all 0.3s ease;
-  width: auto;
-  /* display: inline; */
-  /* padding: 6px; */
-  /* width: 35px !important; */
-  width: 300px;
-  height: 30px;
+  background: var(--overlay-controls);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-container);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  width: calc(100% - 32px);
+  max-width: 480px;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  padding: 6px 16px;
-  /* display: flex; */
+  align-items: center;
+  padding: 10px 16px;
+  gap: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  position: absolute !important;
+  bottom: 12px !important;
+  z-index: 10;
 }
 
-.time {
-  border: 1px solid;
-  width: 30px;
+.play-toggle {
+  flex-shrink: 0;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 14px;
 }
+
+.controls-track {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.controls-time {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 32px;
+  white-space: nowrap;
+}
+
+.controls-time--end {
+  text-align: right;
+}
+
+.speed-btn {
+  flex-shrink: 0;
+  min-width: 42px;
+  padding: 6px 10px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Video scrubber */
 .video-progress-bar {
   -webkit-appearance: none;
-  width: 100%; /* Grow to fill space */
-  height: 4px; /* Thin line */
-  background: rgba(255, 255, 255, 0.2); /* Faint white track */
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
-  margin: 0 10px; /* Breathing room */
 }
 
-/* The Draggable "Thumb" (Chrome/Safari/Edge) */
 .video-progress-bar::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 12px;
   height: 12px;
-  border-radius: 50%; /* Circle */
-  background: #e8e8e8; /* Bright white/grey handle */
+  border-radius: 50%;
+  background: var(--text-primary);
   cursor: pointer;
   transition: transform 0.1s ease;
 }
 
-/* Hover effect for polish */
 .video-progress-bar::-webkit-slider-thumb:hover {
-  transform: scale(1.3);
+  transform: scale(1.4);
+  background: var(--pulse-start);
 }
 
-/* Firefox Support (Optional but good practice) */
 .video-progress-bar::-moz-range-thumb {
   width: 12px;
   height: 12px;
   border: none;
   border-radius: 50%;
-  background: #e8e8e8;
+  background: var(--text-primary);
   cursor: pointer;
+}
+
+/* Time display */
+.time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 35px;
+  white-space: nowrap;
+}
+
+/* ── Save metadata ──────────────────────────────────────────────────── */
+.bookmark-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.bookmark-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border-hot);
+  color: var(--text-primary);
+  background: rgba(0, 242, 255, 0.06);
+}
+
+.bookmark-note {
+  display: block;
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 4px;
+  max-width: 140px;
+  word-break: break-word;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (min-width: 640px) {
+  .bookmark-card {
+    max-width: 560px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-overlay,
+  .delete-btn {
+    transition: none;
+  }
+  .video-progress-bar::-webkit-slider-thumb {
+    transition: none;
+  }
 }

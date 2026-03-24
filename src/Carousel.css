@@ -1,232 +1,301 @@
-/* I used gemini to help me style this app. All javascript implementations are my own work */
-
 .card {
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centers the blocks (Video, Label, Small) horizontally */
-  justify-content: center; /* Centers items vertically (if the card has a fixed height) */
-  text-align: center; /* Centers the TEXT inside the label and small tags */
-  min-width: 100vw !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 100vw;
 }
 
+/* ── Search bar — fixed top, centered pill ──────────────────────────── */
 .form {
-  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
-  backdrop-filter: blur(12px); /* Softens the background video/content */
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
-  border-radius: 25px;
-  box-shadow:
-    0 4px 30px rgba(0, 0, 0, 0.1),
-    /* Outer shadow for depth */ inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-dock);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   transition: all 0.3s ease;
   position: fixed;
   z-index: 99;
-  padding: 6px;
-  /* display: flex; */
-  flex-direction: row;
-  justify-content: space-between;
-  top: 35px;
+  padding: 6px 10px;
+  top: calc(20px + env(safe-area-inset-top));
   left: 50%;
-  transform: translate(-50%, -50%);
-  color: #e8e8e8;
-  margin-top: 10%;
+  transform: translateX(-50%);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 280px;
+  max-width: 90vw;
 }
 
 .form-closed {
-  /* background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 25px;
-  box-shadow:
-    0 4px 30px rgba(0, 0, 0, 0.1),
-    inset 0 0 10px rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease; */
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-dock);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
   position: fixed;
   z-index: 99;
-  padding: 6px;
-
-  flex-direction: row;
-  justify-content: space-between;
-  top: 35px;
-  left: 40px;
-  transform: translate(-50%, -50%);
-  color: #e8e8e8;
-  margin-top: 10%;
+  padding: 6px 10px;
+  top: calc(20px + env(safe-area-inset-top));
+  left: calc(20px + env(safe-area-inset-left));
+  color: var(--text-primary);
 }
 
-.reset-button{
-  background:#444444c3;
-  margin-top: 5px;
-  border-radius: 25px;
-  color: #e8e8e8;
+.reset-button {
+  background: transparent;
+  border: none;
+  margin-top: 4px;
+  border-radius: var(--radius-dock);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  padding: 4px 8px;
 }
 
-.menu-toggle {
-  /* background: rgba(255, 255, 255, 0.05); */
-  /* backdrop-filter: blur(12px); */
-  /* -webkit-backdrop-filter: blur(12px); */
-  /* border: 1px solid rgba(255, 255, 255, 0.1); */
-  /* border-radius: 25px; */
-  /* box-shadow: */
-    /* 0 4px 30px rgba(0, 0, 0, 0.1), */
-    /* inset 0 0 10px rgba(255, 255, 255, 0.05); */
-    /* transition: all 0.3s ease; */
-  position: fixed;
-  z-index: 99;
-  margin-top: 10%;
-
-  top: 10px;
-  right: 6px;
-  z-index: 99;
-  padding: 6px;
-  width: 52px;
-  font-size: 24px;
-  color: #e8e8e8bc;
+.reset-button:hover {
+  color: var(--text-primary);
 }
 
+.search-input {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-dock);
+  width: 240px;
+  padding: 5px 8px;
+  font-size: 15px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.search-input:focus {
+  outline: none;
+}
+
+.search-input-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.in-widget-search-btn {
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-card);
+  padding: 12px 20px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.in-widget-search-btn:hover {
+  background: var(--surface-card-hover);
+  border-color: var(--border-hot);
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px rgba(0, 242, 255, 0.1);
+}
+
+.in-widget-search-btn:active {
+  transform: translateY(0);
+}
+
+/* ── CTA / empty state ──────────────────────────────────────────────── */
 .cta {
-  padding-top: 80px;
+  padding-top: calc(100px + env(safe-area-inset-top));
   width: 90%;
-  margin: 0px auto;
-  font-size: 26px;
+  max-width: 480px;
+  margin: 0 auto;
+  font-size: 20px;
+  font-family: var(--font-heading);
+  color: var(--text-primary);
 }
 
 .cta-text-container {
-  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
-  backdrop-filter: blur(12px); /* Softens the background video/content */
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
-  border-radius: 25px;
-  box-shadow:
-    0 4px 30px rgba(0, 0, 0, 0.1),
-    /* Outer shadow for depth */ inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-container);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
-  padding: 6px;
-  color: #e8e8e8;
-  margin-top: 15%;
+  padding: 20px 16px 16px;
+  color: var(--text-primary);
+  margin-top: 24px;
 }
 
-span {
+.cta-text-container span {
   opacity: 0;
+}
+
+/* ── Suggested account chips ─────────────────────────────────────────── */
+.suggested-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.suggested-chip {
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: 999px;
+  padding: 8px 16px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  white-space: nowrap;
+}
+
+.suggested-chip:hover {
+  background: var(--surface-card-hover);
+  border-color: var(--border-hot);
+}
+
+.suggested-chip:active {
+  transform: scale(0.96);
 }
 
 label {
   min-width: 80vw;
 }
 
-.search-input {
-  background: transparent;
-  border: none;
-  background: transparent;
-  border-radius: 25px;
-  width: 275px;
-  padding: 5px;
-  margin-right: 10px;
-  font-size: 16px;
-  font-family: "Inter", sans-serif;
-  color: #e8e8e8;
-  font-weight: 500;
-}
-
-.search-input:focus {
-  outline: none;
-  background-color: transparent;
-}
-
-.search-input-container {
-  display: flex;
-  margin: 0px auto;
-}
-
-.in-widget-search-input {
-  /* 1. Darker background creates the 'embedded' look */
-  background: rgba(0, 0, 0, 0.25);
-
-  /* 2. Lower blur than the parent to reduce visual noise */
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-
-  /* 3. Subtle border that matches your BookmarkCard.css style */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 25px;
-  font-size: 16px;
-  font-family: "Inter", sans-serif;
-  font-weight: 700;
-
-  /* 4. Sizing and text */
-  padding: 12px 16px;
-  color: #e8e8e8;
-  outline: none;
-  width: 80%;
-  transition: all 0.3s ease;
-}
-
-.in-widget-search-input:focus {
-  /* Increase opacity on focus to show it is active */
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-.in-widget-search-btn {
-  background: rgba(255, 255, 255, 0.1); /* Brighter glass for action */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 12px 12px;
-  color: #e8e8e8;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease-in-out;
-  margin-left: 10px;
-}
-
-.in-widget-search-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-1px);
-}
-
-.in-widget-search-btn:active {
-  transform: translateY(1px);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-/* FontAwesome icon styling within the button */
-.in-widget-search-btn i {
-  font-size: 16px;
-}
-
-.react-video {
-  margin: 0px auto;
-  padding: 0px;
-  padding-left: 0px !important;
-  object-fit: cover;
-  width: 100vw;
-}
-
+/* ── Feed / Swiper ──────────────────────────────────────────────────── */
 .swiper-slide {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Centers vertically */
-  align-items: center; /* Centers horizontally */
+  justify-content: flex-start;
+  align-items: center;
   position: relative;
-  /* padding-bottom: 100px */
 }
 
-/* Ensure the player/image doesn't overflow the screen */
+.react-video {
+  margin: 0 auto;
+  padding: 0;
+  object-fit: cover;
+  width: 100%;
+}
+
+video {
+  max-width: 480px !important;
+  margin: 0 auto;
+  display: block;
+}
+
+/* Tweet metadata card */
+.text-container {
+  width: 93%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  margin: 10px auto 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  padding: 10px 12px !important;
+  color: var(--text-primary);
+}
+
+/* Image swiper */
+.image-swiper {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Save image button */
+.save-image-button {
+  position: absolute;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+  bottom: 20px;
+  right: 20px;
+  top: auto;
+  margin-top: 0;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  background: rgba(20, 20, 22, 0.9) !important;
+  border: 1px solid var(--border-card) !important;
+  transition: border-color 0.2s ease;
+}
+
+.save-image-button:hover {
+  border-color: var(--border-hot) !important;
+}
+
+/* Loading dots */
+.loading-container {
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-dock);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  width: 100px;
+  position: absolute;
+  padding: 10px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px !important;
+  background: var(--text-secondary);
+  border-radius: 50%;
+  margin: 0 4px;
+}
+
+/* ── Swiper overrides ───────────────────────────────────────────────── */
+.swiper,
+img {
+  -webkit-touch-callout: default !important;
+  user-select: auto !important;
+  pointer-events: auto;
+}
+
+.swiper-pagination {
+  pointer-events: none !important;
+}
+
+.swiper-pagination-bullet {
+  background: var(--text-secondary) !important;
+  pointer-events: auto !important;
+  opacity: 0.5;
+}
+
+.swiper-pagination-bullet-active {
+  background: var(--pulse-start) !important;
+  opacity: 1;
+}
+
+button:focus {
+  outline: none;
+}
+
 .media-container {
   max-width: 100%;
   max-height: 100%;
   width: auto;
   height: auto;
-  aspect-ratio: auto; /* Let the media dictate the ratio within limits */
 }
 
-/* For ReactPlayer wrapper */
 .player-wrapper {
   width: 100%;
   height: 100%;
@@ -235,100 +304,27 @@ label {
   justify-content: center;
 }
 
-button:focus {
-  outline: none;
-}
-video{
-  max-width: 400px !important;
-  margin: 0px auto
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (min-width: 640px) {
+  .cta {
+    font-size: 22px;
+  }
+
+  video {
+    max-width: 540px !important;
+  }
+
+  .text-container {
+    max-width: 520px;
+  }
 }
 
-.text-container {
-  width: 93%;
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  margin: 12px auto;
-  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
-  backdrop-filter: blur(12px); /* Softens the background video/content */
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
-  border-radius: 25px;
-  box-shadow:
-    0 4px 30px rgba(0, 0, 0, 0.1),
-    /* Outer shadow for depth */ inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
-  transition: all 0.3s ease;
-  padding: 8px !important;
-  color: #e8e8e8;
-}
-
-.swiper-pagination-bullet {
-  background: grey;
-}
-.swiper-pagination-bullet-active {
-  background: #444444 !important;
-}
-
-.loading-container {
-  background: rgba(255, 255, 255, 0.05); /* Very subtle white */
-  backdrop-filter: blur(12px); /* Softens the background video/content */
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1); /* The "glass" edge */
-  border-radius: 25px;
-  box-shadow:
-    0 4px 30px rgba(0, 0, 0, 0.1),
-    /* Outer shadow for depth */ inset 0 0 10px rgba(255, 255, 255, 0.05); /* Inner glow */
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  width: 100px;
-  position: absolute;
-  padding: 5px;
-  border-radius: 25px;
-}
-
-.dot {
-  width: 15px;
-  height: 15px !important;
-  background: #00000069;
-  border-radius: 25px;
-  margin: 0px 5px;
-}
-
-.swiper,
-img {
-  -webkit-touch-callout: default !important;
-  user-select: auto !important;
-  pointer-events: auto;
-}
-
-/* .save-image-button {
-  position: absolute;
-  z-index: 999;
- 
-  display: block;
-  right: 0;
-  top: 0;
-  margin-top: 50%
-} */
-
-.swiper-pagination {
-  pointer-events: none !important;
-}
-
-/* This ensures the dots themselves still work if you click them */
-.swiper-pagination-bullet {
-  pointer-events: auto !important;
-}
-
-/* Ensure your button is at the absolute front of the line */
-.save-image-button {
-  position: absolute;
-  z-index: 9999 !important; /* Move this to the very front */
-  pointer-events: auto !important;
-  bottom: 20px; /* Put it where you want it */
-  right: 20px;
-  top: auto; /* Clear the top:0 from your current CSS */
-  margin-top: 0; /* Clear that 50% margin */
+@media (prefers-reduced-motion: reduce) {
+  .form,
+  .form-closed,
+  .suggested-chip,
+  .save-image-button,
+  .search-input {
+    transition: none;
+  }
 }

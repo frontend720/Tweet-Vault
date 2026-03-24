@@ -1,0 +1,56 @@
+.scrubber-track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 20px; /* tall hit area for easy touch targeting */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none; /* prevent page scroll during horizontal drag */
+}
+
+/* Background rail */
+.scrubber-track::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  height: 3px;
+  background: var(--border-card);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* Filled (played) portion */
+.scrubber-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 3px;
+  width: 0%;
+  background: var(--pulse-start, #00f2ff);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* Draggable thumb */
+.scrubber-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #f5f5f7;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: transform 0.1s ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+.scrubber-track:hover .scrubber-thumb,
+.scrubber-track:active .scrubber-thumb {
+  transform: translate(-50%, -50%) scale(1.35);
+}

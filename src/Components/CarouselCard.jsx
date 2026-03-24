@@ -1,57 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactPlayer from "react-player";
-import { AxiosContext } from "../AxiosContext";
 
-export const CarouselCard = ({ tweet, tweetIdStyle, isLast, username }) => {
-  // const {isPlaying, setIsPlaying} = useContext(AxiosContext)
+export const CarouselCard = ({ tweet, tweetIdStyle, isLast, username, onVideoError, isActive }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (!isActive) setIsPlaying(false);
+  }, [isActive]);
 
   const videoSrc = tweet?.video_url?.at(-1)?.url || tweet?.post;
   const proxyURL = `${import.meta.env.VITE_FUNCTION_URL}/proxy?url=${encodeURIComponent(videoSrc)}`;
   const rawHeight = tweet?.extended_entities?.media?.[0]?.sizes?.small?.h;
   const cardHeight = rawHeight ? `${rawHeight}px` : "400px";
-  
+  const posterUrl = tweet?.extended_entities?.media?.[0]?.media_url_https;
+
   return (
     <div style={tweetIdStyle} className="card">
       {tweet.video_url !== null && (
         <div
-          style={
-            tweet.video_url === null
-              ? { display: "none" }
-              : {
-                  width: "100vw",
-                  height: cardHeight,
-                  position: "relative",
-                }
-          }
+          style={{
+            width: "100vw",
+            height: cardHeight,
+            position: "relative",
+          }}
         >
+          {/* Hidden probe image — fires onVideoError if the poster (and likely the video) is stale */}
+          {posterUrl && (
+            <img
+              src={posterUrl}
+              alt=""
+              style={{ display: "none" }}
+              onError={onVideoError}
+            />
+          )}
           <ReactPlayer
             slot="media"
             playing={isPlaying}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
+            onError={onVideoError}
             className="react-video"
             playsInline={true}
             width="100%"
             height={rawHeight || "auto"}
-            style={
-              tweet.video_url !== null
-                ? {
-                    display: "block",
-                    height: tweet?.extended_entities?.media[0]?.sizes?.small?.h,
-                    width: "100vw",
-                    objectFit:
-                      tweet?.extended_entities?.media[0]?.sizes?.small?.resize,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }
-                : { display: "none" }
-            }
+            style={{
+              display: "block",
+              height: tweet?.extended_entities?.media[0]?.sizes?.small?.h,
+              width: "100vw",
+              objectFit: tweet?.extended_entities?.media[0]?.sizes?.small?.resize,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
             controls
-            light={tweet.extended_entities?.media?.[0]?.media_url_https}
+            light={posterUrl}
             onClickPreview={() => setIsPlaying(true)}
             src={proxyURL}
-            preload="true"
+            preload="none"
             config={{
               file: {
                 attributes: {

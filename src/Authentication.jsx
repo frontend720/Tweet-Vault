@@ -1,19 +1,19 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
-import { FirebaseContext } from "./FirebaseContext";
+import { useState, useContext, useEffect, useRef } from "react";
+import { AuthContext } from "./AuthContext";
 import gsap from "gsap";
 import "./Authentication.css";
 import image from "./assets/tweetvault.png";
 
 export default function Authentication() {
-  const {
-    createUser,
-    returningUser,
-    handleChange,
-    authentication,
-    signInWithGoogle,
-    authenticatedUser,
-    error
-  } = useContext(FirebaseContext);
+  const { createUser, returningUser, signInWithGoogle, authenticatedUser, error } =
+    useContext(AuthContext);
+
+  const [authentication, setAuthentication] = useState({ email: "", password: "" });
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setAuthentication((prev) => ({ ...prev, [name]: value }));
+  }
 
   const [authenticationToggle, setAuthenticationToggle] = useState(
     authenticatedUser !== null
@@ -32,11 +32,15 @@ export default function Authentication() {
 
   // GSAP Entrance Animation
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set(formRef.current, { opacity: 1, y: 0 });
+      return;
+    }
     gsap.to(formRef.current, {
       opacity: 1,
       y: 0,
       duration: 1,
-      ease: "power3.out", // Smooth "landing" ease
+      ease: "power3.out",
       delay: 0.2,
     });
   }, []);
@@ -44,6 +48,10 @@ export default function Authentication() {
   const imageRef = useRef(null);
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set(imageRef.current, { opacity: 1 });
+      return;
+    }
     gsap.to(imageRef.current, {
       duration: 1.5,
       opacity: 1,
@@ -103,9 +111,16 @@ export default function Authentication() {
         </label>
         <label htmlFor="">{error}</label>
         <button
-          disabled={authentication.password ? false : false}
+          disabled={!authentication.email || !authentication.password}
           className="auth-btn"
-          onClick={authenticationToggle ? returningUser : createUser}
+          onClick={(e) => {
+            e.preventDefault();
+            if (authenticationToggle) {
+              returningUser(authentication.email, authentication.password);
+            } else {
+              createUser(authentication.email, authentication.password);
+            }
+          }}
         >
           {authenticationToggle ? "Login" : "Create Account"}
         </button>

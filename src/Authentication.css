@@ -2,116 +2,169 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100dvh;
   width: 100vw;
-  background-color: #444444; /* Dark background matches the Vault vibe */
+  background-color: var(--bg-primary);
   overflow: hidden;
+  padding: 20px;
+  padding-top: calc(20px + env(safe-area-inset-top));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
 }
 
 .authentication-form {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px; /* Spacing between inputs */
-  width: 70% !important;
-  padding: 40px;
-  
-  /* THE GLASS EFFECT (Ported from your Carousel.css) */
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2), 
-              inset 0 0 10px rgba(255, 255, 255, 0.05);
-  border-radius: 25px;
-  
-  /* Start invisible for GSAP */
-  opacity: 0; 
+  gap: 14px;
+  width: 100%;
+  max-width: 400px;
+  padding: 36px 32px;
+
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-container);
+
+  opacity: 0;
   transform: translateY(20px);
 }
 
-.app-image{
-    opacity: 0
+.app-image {
+  opacity: 0;
+  height: 160px;
+  object-fit: contain;
+  border-radius: var(--radius-card);
+  margin-bottom: 4px;
 }
 
 .app-name {
-  color: #e8e8e8;
-  font-family: 'Inter', sans-serif; /* Assuming you use Inter or similar */
+  color: var(--text-primary);
+  font-family: var(--font-heading);
   font-weight: 800;
-  margin-bottom: 20px;
+  font-size: 28px;
+  margin: 0 0 4px;
   letter-spacing: -1px;
+  background: var(--pulse-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Styled Inputs */
+/* Inputs */
 .auth-input {
   width: 100%;
-  padding: 12px 20px;
-  border-radius: 50px; /* Pill shape */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
-  color: #e8e8e8;
-  font-size: 16px;
+  padding: 12px 18px;
+  border-radius: 50px;
+  border: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
   outline: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+}
+
+.auth-input::placeholder {
+  color: var(--text-secondary);
 }
 
 .auth-input:focus {
-  border-color: #1da1f2; /* Twitter Blue accent on focus */
-  background: rgba(0, 0, 0, 0.4);
+  border-color: var(--border-hot);
+  background: rgba(0, 242, 255, 0.04);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.08);
 }
 
-/* Primary Button */
+/* Primary action button */
 .auth-btn {
   width: 100%;
-  padding: 12px;
+  padding: 13px;
   border-radius: 50px;
   border: none;
-  background: #e8e8e8;
-  color: #111;
+  background: var(--pulse-gradient);
+  color: #fff;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 15px;
+  font-family: var(--font-body);
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  letter-spacing: 0.02em;
 }
 
 .auth-btn:hover {
-  transform: scale(1.02);
+  opacity: 0.9;
+  transform: scale(1.01);
 }
 
 .auth-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.98);
 }
 
-/* Secondary Button (Google) */
+.auth-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Google button */
 .google-btn {
   width: 100%;
   padding: 12px;
   border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: transparent;
-  color: #e8e8e8;
+  border: 1px solid var(--border-card);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .google-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-card-hover);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
-/* Toggle Link */
+/* Toggle link */
 .toggle-label {
-  color: #888;
-  font-size: 14px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
   cursor: pointer;
-  margin-top: 10px;
-  transition: color 0.3s ease;
+  margin-top: 4px;
+  transition: color 0.2s ease;
+  text-align: center;
 }
 
 .toggle-label:hover {
-  color: #e8e8e8;
-  text-decoration: underline;
+  color: var(--pulse-start);
 }
 
-.app-image{
-    height: 175px
+/* Error text */
+label[for=""] {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #ff6b6b;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (min-width: 640px) {
+  .authentication-form {
+    padding: 44px 40px;
+  }
+
+  .app-name {
+    font-size: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-input,
+  .auth-btn,
+  .google-btn,
+  .toggle-label {
+    transition: none;
+  }
 }

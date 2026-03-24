@@ -1,27 +1,25 @@
 import "./RecentSavesComponent.css";
-import { memo, useContext, useEffect, useRef, useState } from "react";
-import { AxiosContext } from "../AxiosContext";
+import { memo, useContext, useMemo } from "react";
+import { TweetContext } from "../TweetContext";
 
-export const RecentSavesComponent = memo(({ id, media }) => {
-  const { retweetRequest } = useContext(AxiosContext);
-  const uniqueItemsMap = new Map(
-    media.slice(0, 11).map((item) => [item.username, item])
-  );
-  const uniqueMedia = [...uniqueItemsMap.values()];
+export const RecentSavesComponent = memo(({ media }) => {
+  const { retweetRequest } = useContext(TweetContext);
 
-  function shuffleArray(array) {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
+  const shuffledMedia = useMemo(() => {
+    const uniqueItemsMap = new Map(
+      media.slice(0, 11).map((item) => [item.username, item])
+    );
+    const uniqueMedia = [...uniqueItemsMap.values()];
+    for (let i = uniqueMedia.length - 1; i > 0; i--) {
+      // eslint-disable-next-line react-hooks/purity
       const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      [uniqueMedia[i], uniqueMedia[j]] = [uniqueMedia[j], uniqueMedia[i]];
     }
-    return newArray;
-  }
-  const shuffledMedia = shuffleArray(uniqueMedia);
+    return uniqueMedia;
+  }, [media]);
 
   return (
     <ul
-      key={id}
       className="recent-list-container"
       style={{
         display: "flex",
@@ -32,14 +30,14 @@ export const RecentSavesComponent = memo(({ id, media }) => {
         gap: "1rem",
       }}
     >
-        <label className="recent-search-label" htmlFor="">Recent Searches</label>
+      <label className="recent-search-label" htmlFor="">Recent Searches</label>
       {shuffledMedia.map((item) => (
         <li key={item.tweetId || item.username}>
           <button
             className="recent-tag-btn"
             onClick={() => retweetRequest(item.username)}
           >
-            <li>{item.username}</li>
+            {item.username}
           </button>
         </li>
       ))}

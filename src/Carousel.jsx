@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, useState, useMemo } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "./Carousel.css";
-import { AxiosContext } from "./AxiosContext";
+import { TweetContext } from "./TweetContext";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Pagination, Thumbs, Virtual } from "swiper/modules";
@@ -11,8 +11,13 @@ import gsap from "gsap";
 import { CarouselCard } from "./Components/CarouselCard";
 import { FirebaseContext } from "./FirebaseContext";
 import RecentSavesComponent from "./Components/RecentSavesComponent.jsx";
+import { SkeletonFeed } from "./Components/Skeleton";
+import HeartButton from "./Components/HeartButton";
+import SavePrompt from "./Components/SavePrompt";
 
 dayjs.extend(relativeTime);
+
+const ACCOUNTS = ["NASA", "NatGeo", "ArchDaily", "RedBull", "HumansOfNY"];
 
 function Carousel() {
   const {
@@ -25,134 +30,65 @@ function Carousel() {
     changeDirection,
     retweetRequest,
     newRetweetRequest,
-    onMenuToggle,
     loadingText,
     handleReachEnd,
     resetUsername,
-  } = useContext(AxiosContext);
+  } = useContext(TweetContext);
 
-  const { saveTweet, media, deleteTweet, saveImage, images } =
+  const { saveTweet, sortedTweets: media, deleteTweet, saveImage, sortedImages: images } =
     useContext(FirebaseContext);
-  const [____________, setIsBookmarked] = useState(false);
-  const uniqueMediaMap = new Map();
 
-  // console.log(tweets)
-
-  function onBookMarkChange() {
-    setIsBookmarked((prev) => !prev);
-  }
-
-  tweets.forEach((tweet) => {
-    const hasMedia = tweet.video_url !== null || tweet.media_url !== null;
-
-    if (hasMedia) {
-      uniqueMediaMap.set(tweet.tweet_id, tweet);
-    } else {
-      return;
-    }
-  });
+  const [erroredIds, setErroredIds] = useState(() => new Set());
+  const [pendingSave, setPendingSave] = useState(null);
 
   const liveTweets = useMemo(() => {
-    const uniqueMediaMap = new Map();
-    tweets?.forEach((tweet) => {
-      if (tweet.video_url || tweet.media_url) {
-        uniqueMediaMap.set(tweet.tweet_id, tweet);
-      }
-    });
-    return Array.from(uniqueMediaMap.values()).sort(
-      (a, b) => b.timestamp - a.timestamp,
-    );
-  }, [tweets]);
+    const seen = new Map();
+    tweets?.forEach((tweet) => seen.set(tweet.tweet_id, tweet));
+    return Array.from(seen.values())
+      .filter((tweet) => (tweet.video_url || tweet.media_url) && !erroredIds.has(tweet.tweet_id))
+      .sort((a, b) => b.timestamp - a.timestamp);
+  }, [tweets, erroredIds]);
 
   const [accountIndex, setAccountIndex] = useState(0);
-  const accounts = ["NASA", "NatGeo", "ArchDaily", "RedBull", "HumansOfNY"];
+  const [activeSlideIdx, setActiveSlideIdx] = useState(0);
 
   useEffect(() => {
-    if (tweets.length !== 0) {
-      return;
-    } else {
-      const intervalId = setInterval(() => {
-        setAccountIndex((prev) => (prev + 1) % accounts.length);
-      }, 3000);
-      () => clearInterval(intervalId);
-    }
-  }, []);
+    if (tweets.length !== 0) return;
+    const intervalId = setInterval(() => {
+      setAccountIndex((prev) => (prev + 1) % ACCOUNTS.length);
+    }, 3000);
+    return () => clearInterval(intervalId);
+  }, [tweets.length]);
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, []);
 
   const accountRef = useRef(null);
   useEffect(() => {
-    if (tweets.length !== 0) {
-      return;
-    } else {
-      gsap.to(accountRef.current, {
-        opacity: 1,
-        duration: 1,
-      });
-      gsap.to(accountRef.current, {
-        delay: 2.5,
-        opacity: 0,
-        duration: 0.5,
-      });
-    }
-  }, [accountIndex]);
+    if (tweets.length !== 0) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    gsap.to(accountRef.current, { opacity: 1, duration: 1 });
+    gsap.to(accountRef.current, { delay: 2.5, opacity: 0, duration: 0.5 });
+  }, [accountIndex, tweets.length]);
 
-  const dotRef = useRef(null);
-
-  useEffect(() => {
-    if (!dotRef.current) return;
-    const dots = dotRef.current.querySelectorAll(".dot");
-    const context = gsap.context(() => {
-      gsap.to(dots, {
-        opacity: 0.25,
-        duration: 1,
-        stagger: 0.33,
-        background: "#555555",
-        repeat: -1,
-        yoyo: true,
-      });
-    });
-    return () => context.revert();
-  }, [dotRef.current]);
-
-  // console.log(tweets);
-
-  function onSlideChangeHandler(swiper) {
-    changeDirection();
-    swiper.allowlideNext = true;
-  }
 
   return (
     <div className="App">
       <form
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            getTweets();
-          }
+          if (e.key === "Enter") getTweets();
         }}
         className={isInputVisible ? "form" : "form-closed"}
+        style={isInputVisible ? { marginTop: 80 } : { marginTop: "" }}
         action=""
       >
         <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-          }}
+          style={{ display: "flex", flexDirection: "row", alignItems: "center" }}
         >
           <button
             onClick={onInputVisibilityButton}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "#e8e8e8",
-            }}
+            style={{ background: "transparent", border: "none", color: "#e8e8e8" }}
           >
             <i
               className={
@@ -173,7 +109,7 @@ function Carousel() {
             placeholder="Handle"
           />
           <button
-            disabled={!username ? true : false}
+            disabled={!username}
             style={
               isInputVisible
                 ? {
@@ -181,21 +117,16 @@ function Carousel() {
                     border: "none",
                     position: "absolute",
                     right: 0,
-                    color: "#e8e8e8 !important",
+                    color: "#e8e8e8",
                   }
                 : { display: "none" }
             }
             onClick={getTweets}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                getTweets();
-              }
+              if (e.key === "Enter") getTweets();
             }}
           >
-            <i
-              style={{ color: "#e8e8e8 !important" }}
-              className="fa-solid fa-arrow-right"
-            ></i>
+            <i style={{ color: "#e8e8e8" }} className="fa-solid fa-arrow-right"></i>
           </button>
         </div>
         <button
@@ -211,13 +142,6 @@ function Carousel() {
         </button>
       </form>
       <div
-        style={isInputVisible ? { display: "none" } : { display: "" }}
-        onClick={onMenuToggle}
-        className="menu-toggle"
-      >
-        <i className="fa-solid fa-bars"></i>
-      </div>
-      <div
         style={tweets.length === 0 ? { display: "" } : { display: "none" }}
         className="cta"
       >
@@ -226,62 +150,45 @@ function Carousel() {
           <>
             <div className="cta-text-container">
               <label>
-                Ready to browse? Type a handle like (
-                <span ref={accountRef}>@{accounts[accountIndex]}</span>) to see
-                their videos and photos.
+                Ready to browse? Tap an account below or search any handle to see their videos and photos.
               </label>
+              <div className="suggested-chips">
+                {ACCOUNTS.map((account) => (
+                  <button
+                    key={account}
+                    className="suggested-chip"
+                    onClick={() => retweetRequest(account)}
+                  >
+                    @{account}
+                  </button>
+                ))}
+              </div>
               <div
                 style={isInputVisible ? { display: "none" } : { display: "" }}
                 className="search-input-container"
               >
-                <input
-                  className="in-widget-search-input"
-                  placeholder={`Search for @${accounts[accountIndex]}`}
-                  style={
-                    username
-                      ? { opacity: 1 }
-                      : { display: "block !important", width: "100%" }
-                  }
-                  type="text"
-                  name="username"
-                  value={username}
-                  onChange={handleChange}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      return getTweets();
-                    }
-                  }}
-                />{" "}
                 <button
-                  onClick={getTweets}
-                  style={username ? { display: "flex" } : { display: "none" }}
                   className="in-widget-search-btn"
+                  onClick={onInputVisibilityButton}
                 >
-                  <i
-                    style={{ color: "#e8e8e8 !important" }}
-                    className="fa-solid fa-arrow-right"
-                  ></i>
+                  <i className="fa-solid fa-magnifying-glass" style={{ marginRight: 8 }}></i>
+                  Search a handle
                 </button>
               </div>
             </div>
             <RecentSavesComponent media={media} />
           </>
         ) : (
-          <div ref={dotRef} className="loading-container">
-            <div className="dot"></div>
-            <div className="dot"></div>
-            <div className="dot"></div>
-            <div className="dot"></div>
-          </div>
+          <SkeletonFeed />
         )}
       </div>
       <Swiper
         onReachEnd={handleReachEnd}
-        // onSlideChange={onSlideChangeHandler}
         onSlideChangeTransitionEnd={(swiper) => {
-          changeDirection(); // Only update state AFTER the animation is smooth
-          onSlideChangeHandler(swiper);
+          changeDirection();
+          swiper.allowSlideNext = true;
         }}
+        onSlideChange={(swiper) => setActiveSlideIdx(swiper.activeIndex)}
         grabCursor={true}
         modules={[Pagination, Thumbs, Virtual]}
         virtual={true}
@@ -297,7 +204,6 @@ function Carousel() {
           const isLiked = media.some(
             (savedTweet) => savedTweet.tweetId === tweet.tweet_id,
           );
-
           const isLastSlide = index === liveTweets.length - 1;
           return (
             <SwiperSlide
@@ -319,6 +225,8 @@ function Carousel() {
                 tweet={tweet}
                 isLast={isLastSlide}
                 username={tweet?.user?.username}
+                isActive={index === activeSlideIdx}
+                onVideoError={() => setErroredIds((prev) => new Set([...prev, tweet.tweet_id]))}
               />
               <div
                 style={
@@ -332,6 +240,7 @@ function Carousel() {
                   direction="horizontal"
                   touchStartPreventDefault={false}
                   nested={true}
+                  touchReleaseOnEdges={true}
                   pagination={{ clickable: true }}
                   modules={[Pagination, Thumbs]}
                   slidesPerView={1}
@@ -342,7 +251,6 @@ function Carousel() {
                       : {
                           height:
                             tweet?.extended_entities?.media[0]?.sizes?.small?.h,
-
                           objectFit:
                             tweet?.extended_entities?.media[0]?.sizes?.resize,
                         }
@@ -353,55 +261,37 @@ function Carousel() {
                       (savedItem) => savedItem.imageUrl === image,
                     );
                     return (
-                      <>
-                        <SwiperSlide
-                          style={
-                            tweet.video_url === null
-                              ? {
-                                  height:
-                                    tweet?.extended_entities?.media[0]?.sizes
-                                      ?.small?.h,
-                                }
-                              : { display: "none" }
-                          }
-                          key={image}
+                      <SwiperSlide
+                        style={
+                          tweet.video_url === null
+                            ? {
+                                height:
+                                  tweet?.extended_entities?.media[0]?.sizes
+                                    ?.small?.h,
+                              }
+                            : { display: "none" }
+                        }
+                        key={image}
+                      >
+                        <img style={{ width: "100%" }} src={image} alt="" />
+                        <button
+                          className="save-image-button swiper-no-swiping"
+                          disabled={isImageLiked}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          style={{
+                            backgroundColor: "#555555",
+                            cursor: isImageLiked ? "not-allowed" : "pointer",
+                          }}
                         >
-                          <img
-                            style={{
-                              width: "100%",
-                            }}
-                            src={image}
-                            alt=""
+                          <HeartButton
+                            isLiked={isImageLiked}
+                            onSave={() => saveImage(image, tweet.tweet_id)}
                           />
-                          <button
-                            className="save-image-button swiper-no-swiping"
-                            disabled={isImageLiked}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              if (!isImageLiked) {
-                                console.log("Image saved:", image);
-                                saveImage(image, tweet.tweet_id);
-                              }
-                            }}
-                            style={{
-                              backgroundColor: isImageLiked
-                                ? "#555555"
-                                : "#555555",
-                              cursor: isImageLiked ? "not-allowed" : "pointer",
-                            }}
-                          >
-                            <i
-                              style={{ color: "#e8e8e8" }}
-                              class={
-                                isImageLiked
-                                  ? "fa-solid fa-heart"
-                                  : "fa-regular fa-heart"
-                              }
-                            ></i>
-                          </button>
-                        </SwiperSlide>
-                      </>
+                        </button>
+                      </SwiperSlide>
                     );
                   })}
                 </Swiper>
@@ -438,11 +328,10 @@ function Carousel() {
                           all: "unset",
                           width: 300,
                         }}
-                        disabled={tweet?.retweet_status === null ? true : false}
+                        disabled={tweet?.retweet_status === null}
                         onClick={() =>
                           retweetRequest(tweet?.retweet_status?.user?.username)
                         }
-                        htmlFor=""
                       >
                         <strong>{tweet?.user?.username}</strong> {tweet?.text}
                       </button>
@@ -460,45 +349,13 @@ function Carousel() {
                   }
                   htmlFor=""
                 >
-                  <label
-                    style={{ marginTop: 10 }}
-                    htmlFor=""
-                    onClick={onBookMarkChange}
-                  >
-                    <i
-                      style={
-                        isLiked
-                          ? {
-                              textAlign: "right",
-                              color: "#e8e8e8",
-                              fontSize: 20,
-                              marginTop: 16,
-                            }
-                          : { textAlign: "right", fontSize: 20, marginTop: 16 }
-                      }
-                      onClick={() => {
-                        if (isLiked) {
-                          deleteTweet(tweet?.tweet_id);
-                        } else {
-                          saveTweet(
-                            tweet?.video_url[tweet?.video_url?.length - 1].url,
-                            tweet?.tweet_id,
-                            tweet?.user?.username,
-                            tweet?.extended_entities?.media[0]?.sizes?.small?.h,
-                            tweet?.extended_entities?.media[0]?.sizes?.small
-                              ?.resize,
-                            tweet.extended_entities?.media?.[0]
-                              ?.media_url_https,
-                            tweet?.retweet_status?.user?.username,
-                            tweet?.retweet_status?.creation_date,
-                            tweet?.creation_date,
-                          );
-                        }
-                      }}
-                      class={
-                        isLiked ? "fa-solid fa-heart" : "fa-regular fa-heart"
-                      }
-                    ></i>
+                  <label style={{ marginTop: 10 }} htmlFor="">
+                    <HeartButton
+                      isLiked={isLiked}
+                      style={{ textAlign: "right", fontSize: 20, marginTop: 16 }}
+                      onSave={() => setPendingSave(tweet)}
+                      onDelete={() => deleteTweet(tweet?.tweet_id)}
+                    />
                   </label>
                 </label>
               </div>
@@ -506,6 +363,28 @@ function Carousel() {
           );
         })}
       </Swiper>
+
+      {pendingSave && (
+        <SavePrompt
+          onDismiss={() => setPendingSave(null)}
+          onConfirm={(tags, note) => {
+            saveTweet(
+              pendingSave?.video_url[pendingSave?.video_url?.length - 1].url,
+              pendingSave?.tweet_id,
+              pendingSave?.user?.username,
+              pendingSave?.extended_entities?.media[0]?.sizes?.small?.h,
+              pendingSave?.extended_entities?.media[0]?.sizes?.small?.resize,
+              pendingSave?.extended_entities?.media?.[0]?.media_url_https,
+              pendingSave?.retweet_status?.user?.username,
+              pendingSave?.retweet_status?.creation_date,
+              pendingSave?.creation_date,
+              tags,
+              note,
+            );
+            setPendingSave(null);
+          }}
+        />
+      )}
     </div>
   );
 }

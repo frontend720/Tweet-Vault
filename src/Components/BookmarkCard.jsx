@@ -2,30 +2,29 @@ import { useState, useRef, useEffect } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "./BookmarkCard.css";
+import VideoScrubber from "./VideoScrubber";
 
 dayjs.extend(relativeTime);
+
+const PLAYBACK_RATES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 1.75, 2];
 
 function BookmarkCard({
   post,
   poster,
-  height,
   username,
   timestamp,
+  tags,
+  note,
   delete_btn,
   request,
-  // key is not accessible as a prop in React, removed it here
 }) {
-  // --- LAZY LOAD STATE ---
   const [shouldLoad, setShouldLoad] = useState(false);
-  const cardRef = useRef(null); // Ref for the container to watch
+  const cardRef = useRef(null);
 
+  // isPlaying = true means PAUSED (controls visible), false means PLAYING (controls hidden)
   const [isPlaying, setIsPlaying] = useState(true);
-  const cardHeight = height ? `${height}px` : "450px";
 
-  // --- STATE MANAGEMENT ---
-  const playbackRate = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 1.75, 2];
   const [rate, setRate] = useState(4);
-
   const [currentTimeSec, setCurrentTimeSec] = useState(0);
   const [durationSec, setDurationSec] = useState(0);
   const [videoDuration, setVideoDuration] = useState("0:00");
@@ -33,29 +32,19 @@ function BookmarkCard({
 
   const videoRef = useRef(null);
 
-  // --- INTERSECTION OBSERVER SETUP ---
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         if (entry.isIntersecting) {
           setShouldLoad(true);
-          observer.disconnect(); // Stop watching once loaded to save resources
+          observer.disconnect();
         }
       },
-      {
-        rootMargin: "200px", // Starts loading 200px BEFORE it enters the screen
-        threshold: 0.1,
-      },
+      { rootMargin: "200px", threshold: 0.1 },
     );
-
-    if (cardRef.current) {
-      observer.observe(cardRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
+    if (cardRef.current) observer.observe(cardRef.current);
+    return () => observer.disconnect();
   }, []);
 
   function handleEnded() {
@@ -65,194 +54,131 @@ function BookmarkCard({
   }
 
   function speedChanger() {
-    setRate((prev) => (prev + 1) % playbackRate.length);
+    setRate((prev) => (prev + 1) % PLAYBACK_RATES.length);
   }
 
   const handleLoadedMetadata = () => {
     const video = videoRef.current;
     if (!video) return;
-
     const duration = video.duration;
     setDurationSec(duration);
     const minutes = Math.floor(duration / 60);
     const seconds = Math.floor(duration % 60);
-    const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
-    setVideoDuration(`${minutes}:${formattedSeconds}`);
+    setVideoDuration(`${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`);
   };
 
   const handleTimeUpdate = () => {
     const video = videoRef.current;
     if (!video) return;
-
     const current = video.currentTime;
     setCurrentTimeSec(current);
     const minutes = Math.floor(current / 60);
     const seconds = Math.floor(current % 60);
-    const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
-    setCurrentVideoPosition(`${minutes}:${formattedSeconds}`);
+    setCurrentVideoPosition(`${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`);
   };
 
-  const handleScrub = (e) => {
+  const handleSeek = (time) => {
     const video = videoRef.current;
     if (!video) return;
-    const manualChange = Number(e.target.value);
-    video.currentTime = manualChange;
-    setCurrentTimeSec(manualChange);
+    video.currentTime = time;
+    setCurrentTimeSec(time);
   };
 
   useEffect(() => {
     if (videoRef.current) {
-      videoRef.current.playbackRate = playbackRate[rate];
+      videoRef.current.playbackRate = PLAYBACK_RATES[rate];
     }
   }, [rate]);
 
-  function videoPlayToggle(shouldPlay) {
-    if (videoRef.current) {
-      if (shouldPlay) {
-        videoRef.current.play();
-        setIsPlaying(false);
-      } else {
-        videoRef.current.pause();
-        setIsPlaying(true);
-      }
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setIsPlaying(false);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(true);
     }
-  }
-
-  const [_________, setIsHovering] = useState(false);
-
-  function onHoverChange() {
-    setIsHovering((prev) => !prev);
-  }
+  };
 
   const proxyURL = `${import.meta.env.VITE_FUNCTION_URL}/proxy?url=${encodeURIComponent(post)}`;
-// console.log(proxyURL)
+
+  // Controls are visible when paused (isPlaying=true), hidden when playing (isPlaying=false)
+  const hidden = { opacity: 0, pointerEvents: "none" };
+
   return (
     <div
-      ref={cardRef} // Attach ref here for the observer
-      onClick={onHoverChange}
+      ref={cardRef}
       className="card bookmark-card"
-      style={{
-        width: "100vw",
-        height: cardHeight,
-        position: "relative",
-        color: "#e8e8e8",
-      }}
+      style={{ width: "100vw", position: "relative", color: "var(--text-primary)" }}
     >
       <div
-        className="delete-btn"
-        style={
-          isPlaying
-            ? {
-                position: "absolute",
-                top: 0,
-                left: 0,
-                margin: 20,
-                zIndex: 99,
-              }
-            : { display: "none" }
+        className="delete-btn video-overlay"
+        style={isPlaying
+          ? { position: "absolute", top: 0, left: 0, margin: 20, zIndex: 99 }
+          : { position: "absolute", top: 0, left: 0, margin: 20, zIndex: 99, ...hidden }
         }
         onClick={delete_btn}
       >
         <i className="fa-solid fa-trash-can"></i>
       </div>
+
       <div
+        className="video-overlay"
         onClick={request}
-        style={
-          isPlaying
-            ? {
-                position: "absolute",
-                top: 0,
-                right: 0,
-                padding: 16,
-                fontWeight: 300,
-                marginBottom: 50,
-                zIndex: 99,
-                cursor: "pointer",
-              }
-            : { display: "none" }
+        style={isPlaying
+          ? { position: "absolute", top: 0, right: 0, padding: 16, fontWeight: 300, zIndex: 99, cursor: "pointer" }
+          : { position: "absolute", top: 0, right: 0, padding: 16, fontWeight: 300, zIndex: 99, cursor: "pointer", ...hidden }
         }
       >
         <h4 className="bookmark-username">@{username}</h4>
-        <small style={{ textAlign: "right" }}>
-          {dayjs(timestamp).fromNow()}
-        </small>
+        <small style={{ textAlign: "right" }}>{dayjs(timestamp).fromNow()}</small>
+        {tags?.length > 0 && (
+          <div className="bookmark-tags">
+            {tags.map((tag) => (
+              <span key={tag} className="bookmark-tag">{tag}</span>
+            ))}
+          </div>
+        )}
+        {note && <small className="bookmark-note">{note}</small>}
       </div>
 
       <div
-        className="play-btn"
-        style={{
-          position: "absolute",
-          bottom: 0,
-          zIndex: 99,
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 10,
-        }}
+        className="play-btn video-overlay"
+        onClick={(e) => e.stopPropagation()}
+        style={!isPlaying ? hidden : undefined}
       >
-        <div
-          style={{ marginRight: 10 }}
-          onClick={() => videoPlayToggle(isPlaying)}
-        >
-          <i
-            className={isPlaying ? "fa-solid fa-play" : "fa-solid fa-pause"}
-          ></i>
+        <div className="play-toggle" onClick={togglePlay}>
+          <i className={isPlaying ? "fa-solid fa-play" : "fa-solid fa-pause"}></i>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 4,
-            width: "100%",
-          }}
-        >
-          <div style={{ minWidth: "35px" }}>{currentVideoPosition}</div>
-
-          <input
-            type="range"
-            min="0"
-            max={durationSec}
-            value={currentTimeSec}
-            onChange={handleScrub}
-            className="video-progress-bar"
-            step={0.1}
+        <div className="controls-track">
+          <span className="controls-time">{currentVideoPosition}</span>
+          <VideoScrubber
+            currentTime={currentTimeSec}
+            duration={durationSec}
+            onSeek={handleSeek}
           />
-
-          <div style={{ minWidth: "35px" }}>{videoDuration}</div>
+          <span className="controls-time controls-time--end">{videoDuration}</span>
         </div>
 
-        <button
-          style={{
-            padding: "8px 15px",
-            background: "#44444475",
-            color: "#e8e8e8d7",
-            marginLeft: "10px",
-          }}
-          onClick={speedChanger}
-        >
-          {playbackRate[rate]}x
+        <button className="speed-btn" onClick={speedChanger}>
+          {PLAYBACK_RATES[rate]}x
         </button>
       </div>
 
       <video
         ref={videoRef}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-        }}
-        // Only insert the src if shouldLoad is true
+        onClick={togglePlay}
+        style={{ width: "100%", height: "auto", display: "block" }}
         src={shouldLoad ? proxyURL : undefined}
         referrerPolicy="no-referrer"
         poster={poster}
-        preload={shouldLoad ? "metadata" : "none"} // Double protection
+        preload={!shouldLoad ? "none" : !isPlaying ? "auto" : "metadata"}
         onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
         playsInline={true}
-        playing
       />
     </div>
   );

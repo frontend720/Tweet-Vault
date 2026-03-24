@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full bleed background for maskable (no rounded corners — OS clips) -->
+  <rect width="512" height="512" fill="#111012"/>
+  <!-- Bookmark shape — scaled inward ~10% for maskable safe zone -->
+  <path d="M164 134 h184 a18 18 0 0 1 18 18 v226 l-110 -62 -110 62 V152 a18 18 0 0 1 18 -18 z"
+        fill="none" stroke="#00f2ff" stroke-width="20" stroke-linejoin="round"/>
+  <!-- Lock body -->
+  <rect x="220" y="252" width="72" height="54" rx="10" fill="#00f2ff"/>
+  <!-- Lock shackle -->
+  <path d="M236 252 v-20 a20 20 0 0 1 40 0 v20"
+        fill="none" stroke="#00f2ff" stroke-width="15" stroke-linecap="round"/>
+  <!-- Keyhole -->
+  <circle cx="256" cy="278" r="8" fill="#111012"/>
+  <rect x="252" y="282" width="8" height="14" rx="2" fill="#111012"/>
+</svg>

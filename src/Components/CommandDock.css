@@ -1,0 +1,132 @@
+.command-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.dock-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-dock);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  pointer-events: all;
+}
+
+.dock-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 60px;
+}
+
+.dock-item:hover {
+  background: var(--surface-glass-hover);
+  color: var(--text-primary);
+  border-color: transparent;
+}
+
+.dock-item:focus {
+  outline: none;
+}
+
+.dock-item--active {
+  color: transparent;
+  background: rgba(0, 242, 255, 0.08);
+  border: 1px solid var(--border-hot);
+}
+
+.dock-item--active i {
+  background: var(--pulse-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dock-item--logout:hover {
+  color: #ff4d4d;
+}
+
+.dock-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+
+.dock-item--active .dock-label {
+  background: var(--pulse-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Breathing animation when new content is available */
+@keyframes dock-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+}
+
+.dock-inner--pulse {
+  animation: dock-breathe 2s ease-in-out infinite;
+}
+
+/* Light mode dock */
+[data-theme="light"] .dock-inner {
+  background: rgba(245, 245, 247, 0.88);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .dock-item {
+  color: #5a5a6e;
+}
+
+[data-theme="light"] .dock-item:hover {
+  color: #111012;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .dock-item--active {
+  background: rgba(0, 160, 185, 0.1);
+  border-color: rgba(0, 160, 185, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-item {
+    transition: none;
+  }
+  .dock-inner--pulse {
+    animation: none;
+  }
+}
+
+/* Responsive: on wider screens, dock is proportionally sized */
+@media (min-width: 640px) {
+  .dock-item {
+    padding: 8px 24px;
+    min-width: 72px;
+  }
+}

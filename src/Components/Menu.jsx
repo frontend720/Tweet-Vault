@@ -1,25 +1,33 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { Link } from "react-router-dom";
-import { AxiosContext } from "../AxiosContext";
+import { TweetContext } from "../TweetContext";
 import gsap from "gsap";
 import "./Menu.css";
-import { FirebaseContext } from "../FirebaseContext";
+import { AuthContext } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Menu() {
-  const { onMenuToggle, menuToggle } = useContext(AxiosContext);
-  const { logout } = useContext(FirebaseContext);
+  const { onMenuToggle, menuToggle } = useContext(TweetContext);
+  const { logout } = useContext(AuthContext);
   const [selectedTab, setSelectedTab] = useState(null);
   const navVisibilityRef = useRef(null);
-  const iconRef = useRef(null);
+  const menuRef = useRef(null);
+
+  const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
+    if (reducedMotion()) {
+      gsap.set(navVisibilityRef.current, { opacity: 1 });
+      return;
+    }
     gsap.to(navVisibilityRef.current, {
       opacity: 1,
       duration: 0.75,
     });
   }, []);
+
   useEffect(() => {
+    if (reducedMotion()) return;
     const ctx = gsap.context(() => {
       gsap.to(".nav-item .nav-item-spacing", {
         duration: 1,
@@ -41,7 +49,6 @@ export default function Menu() {
         rotation: 360,
         overwrite: true,
       });
-
       gsap.to(".nav-item .icon", {
         duration: 0.75,
         rotation: -360,
@@ -51,8 +58,13 @@ export default function Menu() {
 
     return () => ctx.revert();
   }, [selectedTab]);
+
   useEffect(() => {
-    gsap.to("#item-visibility-stagger", {
+    if (reducedMotion()) {
+      gsap.set(".item-visibility-stagger", { opacity: 1 });
+      return;
+    }
+    gsap.to(".item-visibility-stagger", {
       opacity: 1,
       duration: 1,
       stagger: 0.33,
@@ -60,7 +72,17 @@ export default function Menu() {
     });
   }, [selectedTab]);
 
+  useEffect(() => {
+    if (menuToggle === false) {
+      gsap.to(menuRef.current, { duration: reducedMotion() ? 0 : 1, opacity: 0 });
+    }
+  }, [menuToggle]);
+
   function menuAnimation() {
+    if (reducedMotion()) {
+      onMenuToggle();
+      return;
+    }
     gsap.to(menuRef.current, {
       opacity: 0,
       duration: 1,
@@ -71,22 +93,13 @@ export default function Menu() {
     });
   }
 
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    if (menuToggle === false) {
-      gsap.to(menuRef.current, {
-        duration: 1,
-        opacity: 0,
-      });
-    }
-    if (menuToggle === true) {
-      return;
-    }
-  }, [menuToggle]);
-
   const navigation = useNavigate();
   function handleDestination(destination = null) {
+    if (reducedMotion()) {
+      onMenuToggle();
+      if (destination) navigation(destination);
+      return;
+    }
     gsap.to(".nav-list-item", {
       duration: 0.5,
       opacity: 0,
@@ -107,7 +120,6 @@ export default function Menu() {
           <div className="close-button" onClick={menuAnimation}>
             <i
               style={{ marginTop: "7%" }}
-              id="icon"
               className="fa-solid fa-xmark"
             ></i>
           </div>
@@ -117,17 +129,10 @@ export default function Menu() {
                 setSelectedTab("home");
                 handleDestination("/");
               }}
-              className={
-                selectedTab === "home" ? "nav-item-selected" : "nav-item"
-              }
-              id="item-visibility-stagger"
+              className={`item-visibility-stagger ${selectedTab === "home" ? "nav-item-selected" : "nav-item"}`}
             >
               <label className="nav-list-item">
-                <i
-                  id="icon"
-                  ref={iconRef}
-                  className="icon fa-brands fa-x-twitter"
-                ></i>
+                <i className="icon fa-brands fa-x-twitter"></i>
                 <span className="nav-item-spacing">Posts</span>
               </label>
             </div>
@@ -138,17 +143,10 @@ export default function Menu() {
                 setSelectedTab("bookmarks");
                 handleDestination("/bookmarks");
               }}
-              className={
-                selectedTab === "bookmarks" ? "nav-item-selected" : "nav-item"
-              }
-              id="item-visibility-stagger"
+              className={`item-visibility-stagger ${selectedTab === "bookmarks" ? "nav-item-selected" : "nav-item"}`}
             >
               <label className="nav-list-item">
-                <i
-                  id="icon"
-                  ref={iconRef}
-                  className="icon fa-solid fa-vault"
-                ></i>
+                <i className="icon fa-solid fa-vault"></i>
                 <span className="nav-item-spacing">Vault</span>
               </label>
             </div>
@@ -159,31 +157,18 @@ export default function Menu() {
                 setSelectedTab("gallery");
                 handleDestination("/gallery");
               }}
-              className={
-                selectedTab === "bookmarks" ? "nav-item-selected" : "nav-item"
-              }
-              id="item-visibility-stagger"
+              className={`item-visibility-stagger ${selectedTab === "gallery" ? "nav-item-selected" : "nav-item"}`}
             >
-              <i 
-              id="icon" 
-              ref={iconRef} 
-              className="icon fa-solid fa-photo-film"></i>
+              <i className="icon fa-solid fa-photo-film"></i>
               <span className="nav-item-spacing">Photos</span>
             </div>
           </Link>
           <div
             onClick={() => setSelectedTab("account")}
-            className={
-              selectedTab === "account" ? "nav-item-selected" : "nav-item"
-            }
-            id="item-visibility-stagger"
+            className={`item-visibility-stagger ${selectedTab === "account" ? "nav-item-selected" : "nav-item"}`}
           >
             <label className="nav-list-item">
-              <i
-                id="icon"
-                ref={iconRef}
-                className="icon fa-solid fa-user-astronaut"
-              ></i>
+              <i className="icon fa-solid fa-user-astronaut"></i>
               <span className="nav-item-spacing">Account</span>
             </label>
           </div>

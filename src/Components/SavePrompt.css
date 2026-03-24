@@ -1,0 +1,199 @@
+.save-prompt-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 300;
+}
+
+.save-prompt {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 301;
+  background: var(--surface-card);
+  border-top: 1px solid var(--border-glass);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: sheet-up 0.28s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.save-prompt__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-glass);
+  margin: 0 auto 4px;
+}
+
+.save-prompt__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.save-prompt__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.save-prompt__tag {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border-card);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.save-prompt__tag--active {
+  border-color: var(--border-hot);
+  background: rgba(0, 242, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.save-prompt__recent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.save-prompt__recent-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.save-prompt__recent-combos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.save-prompt__recent-combo {
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-card);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.save-prompt__recent-combo:hover {
+  border-color: var(--border-glass);
+  color: var(--text-primary);
+}
+
+.save-prompt__recent-combo--active {
+  border-color: var(--border-hot);
+  background: rgba(0, 242, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.save-prompt__note {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+}
+
+.save-prompt__note:focus {
+  border-color: var(--border-hot);
+}
+
+.save-prompt__note::placeholder {
+  color: var(--text-secondary);
+}
+
+.save-prompt__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.save-prompt__btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-card);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.save-prompt__btn--cancel {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.save-prompt__btn--save {
+  background: rgba(0, 242, 255, 0.1);
+  border-color: var(--border-hot);
+  color: var(--text-primary);
+}
+
+.save-prompt__btn--save:hover {
+  background: rgba(0, 242, 255, 0.18);
+}
+
+/* Light mode */
+[data-theme="light"] .save-prompt {
+  background: #f5f5f7;
+}
+
+[data-theme="light"] .save-prompt__note {
+  background: #ffffff;
+  color: #111012;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .save-prompt {
+    animation: none;
+  }
+  .save-prompt__tag,
+  .save-prompt__btn,
+  .save-prompt__recent-combo {
+    transition: none;
+  }
+}
+
+@media (min-width: 640px) {
+  .save-prompt {
+    max-width: 520px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 20px 20px 0 0;
+  }
+}

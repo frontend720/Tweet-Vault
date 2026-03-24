@@ -1,0 +1,178 @@
+/* ── Skeleton shimmer base ───────────────────────────────────────────── */
+.sk {
+  background: linear-gradient(
+    90deg,
+    var(--surface-card) 25%,
+    var(--surface-card-hover) 50%,
+    var(--surface-card) 75%
+  );
+  background-size: 400% 100%;
+  animation: sk-shine 1.5s ease infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes sk-shine {
+  0%   { background-position: 100% 50%; }
+  100% { background-position:   0% 50%; }
+}
+
+/* ── Bookmark skeleton ───────────────────────────────────────────────── */
+.sk-bookmark {
+  width: 100%;
+  position: relative;
+  border-top: 1px solid var(--border-card);
+}
+
+.sk-bookmark__video {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-height: 75vh;
+}
+
+.sk-bookmark__delete {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-card);
+}
+
+.sk-bookmark__user {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.sk-bookmark__name {
+  width: 100px;
+  height: 14px;
+}
+
+.sk-bookmark__time {
+  width: 60px;
+  height: 11px;
+}
+
+.sk-bookmark__controls {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 480px;
+  background: var(--overlay-controls);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-container);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sk-bookmark__play {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sk-bookmark__scrubber {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.sk-bookmark__speed {
+  width: 42px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+/* ── Feed skeleton ───────────────────────────────────────────────────── */
+.sk-feed {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sk-feed__video {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-height: 70vh;
+}
+
+.sk-feed__meta {
+  width: 93%;
+  max-width: 460px;
+  margin: 10px auto 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-card);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sk-feed__meta-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sk-feed__avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sk-feed__lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sk-feed__line--long  { height: 13px; width: 80%; }
+.sk-feed__line--short { height: 13px; width: 50%; }
+
+.sk-feed__date {
+  height: 11px;
+  width: 80px;
+  align-self: flex-end;
+}
+
+/* ── Gallery skeleton ────────────────────────────────────────────────── */
+.sk-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.sk-gallery__cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-micro);
+}
+
+@media (min-width: 640px) {
+  .sk-gallery {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk {
+    animation: none;
+    background: var(--surface-card-hover);
+    background-size: auto;
+  }
+}
