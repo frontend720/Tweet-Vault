@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect, useContext } from "react";
 import { useLocation, useParams, useNavigate, useSearchParams } from "react-router";
 import ReactMarkdown from "react-markdown";
-import { ref, push, onValue, remove } from "firebase/database";
-import { doc, getDoc } from "firebase/firestore";
-import { rtdb, auth, db } from "../config";
+import { io } from "socket.io-client";
+import { auth } from "../config";
 import { TweetContext } from "../TweetContext";
 import { FirebaseContext } from "../FirebaseContext";
 import { AuthContext } from "../AuthContext";
@@ -11,6 +10,7 @@ import StoryMode from "./StoryMode";
 import "./PersonaChat.css";
 
 const FUNCTIONS_BASE = new URL(import.meta.env.VITE_FUNCTION_URL).origin;
+const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? "";
 
 function formatTime(ts) {
   if (!ts) return "";
@@ -59,17 +59,18 @@ export default function PersonaChat() {
   const [persona, setPersona] = useState(state?.persona ?? null);
   const [personaLoading, setPersonaLoading] = useState(!state?.persona);
 
-  // Fetch persona from Firestore when navigated to via push notification (no router state).
-  // Use authenticatedUser from context — it's seeded from localStorage immediately on load,
-  // so it's available even before Firebase auth restores its session from IndexedDB.
+  // Fetch persona from Express server when navigated via push notification (no router state).
   useEffect(() => {
     if (persona) { setPersonaLoading(false); return; }
     const pid = searchParams.get("pid");
     if (!pid || !authenticatedUser) { setPersonaLoading(false); return; }
-    getDoc(doc(db, "users", authenticatedUser, "personas", pid))
-      .then((snap) => {
-        if (snap.exists()) setPersona({ _id: snap.id, ...snap.data() });
-      })
+    auth.currentUser?.getIdToken()
+      .then((token) => fetch(`${SERVER_URL}/api/personas/${pid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }))
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data) setPersona(data); })
+      .catch(console.error)
       .finally(() => setPersonaLoading(false));
   }, [persona, searchParams, authenticatedUser]);
 
@@ -94,20 +95,28 @@ export default function PersonaChat() {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const socketRef = useRef(null);
 
+  // Socket.io connection — replaces Firebase RTDB onValue listener
   useEffect(() => {
-    const uid = auth.currentUser?.uid;
-    if (!uid || !persona?._id) return;
-    const chatRef = ref(rtdb, `chats/${uid}/${persona._id}`);
-    const unsubscribe = onValue(chatRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) { setMessages([]); return; }
-      const msgs = Object.entries(data)
-        .map(([, val]) => val)
-        .sort((a, b) => a.timestamp - b.timestamp);
-      setMessages(msgs);
+    if (!persona?._id) return;
+
+    let socket;
+    auth.currentUser?.getIdToken().then((token) => {
+      socket = io(SERVER_URL, { auth: { token } });
+      socketRef.current = socket;
+
+      socket.emit("join_chat", persona._id);
+
+      socket.on("chat_history", (history) => setMessages(history));
+      socket.on("new_message", (msg) => setMessages((prev) => [...prev, msg]));
+      socket.on("chat_cleared", () => setMessages([]));
     });
-    return unsubscribe;
+
+    return () => {
+      socket?.disconnect();
+      socketRef.current = null;
+    };
   }, [persona?._id]);
 
   useEffect(() => {
@@ -149,12 +158,8 @@ export default function PersonaChat() {
     );
   }
 
-  function chatRef() {
-    return ref(rtdb, `chats/${auth.currentUser?.uid}/${persona._id}`);
-  }
-
-  async function clearChat() {
-    await remove(chatRef());
+  function clearChat() {
+    socketRef.current?.emit("clear_chat", persona._id);
   }
 
   async function handleFileSelect(e) {
@@ -185,15 +190,10 @@ export default function PersonaChat() {
     setShowAttachPanel(false);
     setIsLoading(true);
 
-    const userMsg = {
-      role: "user",
-      content: text,
-      timestamp: Date.now(),
-      ...(imageUrl && { imageUrl }),
-    };
-    await push(chatRef(), userMsg);
+    const userMsg = { role: "user", content: text, ...(imageUrl && { imageUrl }) };
+    socketRef.current?.emit("send_message", { personaId: persona._id, ...userMsg });
 
-    const history = [...messages, { role: "user", content: text, ...(imageUrl && { imageUrl }) }];
+    const history = [...messages, userMsg];
 
     try {
       const res = await fetch(`${FUNCTIONS_BASE}/chatWithPersona`, {
@@ -209,14 +209,18 @@ export default function PersonaChat() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Something went wrong.");
       if (data.message) {
-        await push(chatRef(), { role: "assistant", content: data.message, timestamp: Date.now() });
+        socketRef.current?.emit("send_message", {
+          personaId: persona._id,
+          role: "assistant",
+          content: data.message,
+        });
       }
     } catch (err) {
       console.error("Chat error:", err);
-      await push(chatRef(), {
+      socketRef.current?.emit("send_message", {
+        personaId: persona._id,
         role: "assistant",
         content: err.message ?? "Something went wrong. Try again.",
-        timestamp: Date.now(),
       });
     } finally {
       setIsLoading(false);
@@ -225,11 +229,13 @@ export default function PersonaChat() {
   }
 
   async function selectScenario(scenario) {
-    await remove(chatRef());
-    await push(chatRef(), {
+    clearChat();
+    // Brief delay so the clear propagates before we send the opener
+    await new Promise((r) => setTimeout(r, 100));
+    socketRef.current?.emit("send_message", {
+      personaId: persona._id,
       role: "assistant",
       content: scenario.opener,
-      timestamp: Date.now(),
     });
     setMode("chat");
   }
