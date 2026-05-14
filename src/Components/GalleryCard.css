@@ -1,0 +1,200 @@
+/* ── Scene (preserves 3D perspective) ──────────────────────────────── */
+.gc-scene {
+  perspective: 600px;
+  cursor: pointer;
+  border-radius: var(--radius-micro);
+  overflow: hidden;
+}
+
+/* ── Card (the thing that flips) ───────────────────────────────────── */
+.gc-card {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.4, 0.2, 0.2, 1);
+  border-radius: var(--radius-micro);
+}
+
+.gc-scene--flipped .gc-card {
+  transform: rotateY(180deg);
+}
+
+/* ── Both faces ─────────────────────────────────────────────────────── */
+.gc-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--radius-micro);
+  overflow: hidden;
+}
+
+/* ── Front ──────────────────────────────────────────────────────────── */
+.gc-face--front {
+  background: var(--surface-card);
+}
+
+.gc-face__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Username label on front — bottom gradient */
+.gc-face__label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 18px 6px 5px;
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.72));
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Back ───────────────────────────────────────────────────────────── */
+.gc-face--back {
+  transform: rotateY(180deg);
+  background: var(--bg-primary);
+}
+
+.gc-face__back-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(10px) brightness(0.25) saturate(0.6);
+  transform: scale(1.1);
+}
+
+.gc-face__back-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 11, 0.45);
+}
+
+.gc-face__back-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px;
+}
+
+.gc-back__username {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ── Action buttons row ─────────────────────────────────────────────── */
+.gc-back__actions {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.gc-back__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 8px;
+  padding: 5px 7px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  line-height: 1;
+}
+
+.gc-back__btn i {
+  font-size: 11px;
+}
+
+.gc-back__btn--fullsize {
+  padding: 5px 8px;
+}
+
+.gc-back__btn--feed:hover {
+  border-color: rgba(0, 242, 255, 0.5);
+  background: rgba(0, 242, 255, 0.12);
+}
+
+.gc-back__btn--profile:hover {
+  border-color: rgba(0, 242, 255, 0.5);
+  background: rgba(0, 242, 255, 0.12);
+}
+
+.gc-back__btn--delete:hover {
+  border-color: rgba(255, 77, 77, 0.5);
+  background: rgba(255, 77, 77, 0.12);
+  color: #ff4d4d;
+}
+
+/* Flip-back affordance — bottom of card */
+.gc-back__flip-back {
+  position: absolute;
+  bottom: 4px;
+  right: 5px;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.35);
+  font-size: 9px;
+  cursor: pointer;
+  padding: 2px;
+  transition: color 0.15s ease;
+}
+
+.gc-back__flip-back:hover {
+  color: rgba(255,255,255,0.7);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (min-width: 640px) {
+  .gc-card {
+    height: 160px;
+  }
+
+  .gc-back__btn {
+    font-size: 9px;
+    padding: 6px 9px;
+  }
+
+  .gc-back__btn i {
+    font-size: 13px;
+  }
+
+  .gc-back__username {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gc-card {
+    transition: none;
+  }
+}

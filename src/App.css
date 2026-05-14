@@ -13,6 +13,7 @@
   min-height: 100vh;
   width: 100%;
   color: var(--text-primary);
+  padding-top: env(safe-area-inset-top);
 }
 
 /* All authenticated pages get bottom padding for the dock */

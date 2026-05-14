@@ -1,28 +1,18 @@
-import { useContext, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AuthContext } from "../AuthContext";
 import "./CommandDock.css";
 
 const NAV_ITEMS = [
   { path: "/", icon: "fa-brands fa-x-twitter", label: "Posts" },
   { path: "/bookmarks", icon: "fa-solid fa-vault", label: "Vault" },
   { path: "/gallery", icon: "fa-solid fa-photo-film", label: "Gallery" },
+  { path: "/settings", icon: "fa-solid fa-sliders", label: "Settings" },
 ];
 
 export default function CommandDock() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useContext(AuthContext);
 
-  const [isDark, setIsDark] = useState(
-    () => (localStorage.getItem("theme") ?? "dark") === "dark"
-  );
-
-  useEffect(() => {
-    const theme = isDark ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [isDark]);
+  if (location.pathname.startsWith("/chat/")) return null;
 
   return (
     <nav className="command-dock">
@@ -41,22 +31,6 @@ export default function CommandDock() {
             </button>
           );
         })}
-        <button
-          className="dock-item"
-          onClick={() => setIsDark((d) => !d)}
-          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          <i className={isDark ? "fa-solid fa-sun" : "fa-solid fa-moon"}></i>
-          <span className="dock-label">{isDark ? "Light" : "Dark"}</span>
-        </button>
-        <button
-          className="dock-item dock-item--logout"
-          onClick={logout}
-          aria-label="Logout"
-        >
-          <i className="fa-solid fa-arrow-right-from-bracket"></i>
-          <span className="dock-label">Logout</span>
-        </button>
       </div>
     </nav>
   );

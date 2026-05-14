@@ -88,15 +88,72 @@ Design / UX
 
 [x] prefers-reduced-motion support: wrap all GSAP and CSS animations in a @media (prefers-reduced-motion: reduce) check. Replace spring/fade transitions with instant or linear 200ms equivalents for users with vestibular disorders.
 
-[ ] Vault Collections: allow users to create named collections (folders) within bookmarks — e.g. "Research", "Funny", "Tech". Add a tab bar at the top of the Bookmarks view to filter by collection. Requires a new Firestore field on saved items.
+[x] Vault Collections: allow users to create named collections (folders) within bookmarks — e.g. "Research", "Funny", "Tech". Add a tab bar at the top of the Bookmarks view to filter by collection. Requires a new Firestore field on saved items.
 
 [x] Contextual save prompt: when saving a video, show a brief bottom sheet asking "why are you saving this?" with quick-select tags (Reference, Inspiration, Follow-up, Watch Later) plus an optional text note. Store this metadata on the Firestore document so the Vault is searchable by intent.
 
 Product Identity
-[ ] Add app name and logo: display the app name/brand visibly after login — currently nothing identifies this as a finished product vs. a prototype. Add a wordmark or logo to the empty feed state and/or the auth screen.
+[x] Add app name and logo: display the app name/brand visibly after login — currently nothing identifies this as a finished product vs. a prototype. Add a wordmark or logo to the empty feed state and/or the auth screen.
 
 [ ] Redesign the Bookmarks page: the current stacked full-width video list reads like a debug view. Redesign it as a true curated vault — thumbnail grid or card layout with username, timestamp, and a visual preview — so it feels like a collection rather than a feed.
 
 [x] Landing/onboarding flow: new users see a blank screen with a search box and no explanation of what the app does. Add a brief onboarding moment (one screen or animated empty state) that communicates the value proposition before the user has to do anything.
 
-[ ] Surface the app name on the feed: the main feed has no persistent header or identity marker. A minimal fixed top bar with the app name or logo would make the app feel cohesive and intentional.
+[x] Surface the app name on the feed: the main feed has no persistent header or identity marker. A minimal fixed top bar with the app name or logo would make the app feel cohesive and intentional.
+
+Feed Bugs / Polish
+[x] Carousel video cropping on mobile: API-provided dimensions (extended_entities.media[0].sizes.small) didn't match actual media proportions, causing crops. Fixed by computing aspect-ratio from raw API width/height and applying it to the container, letting the browser scale correctly.
+
+[x] Video fullscreen cropping on desktop: a global video { max-width: 480px !important } rule was applied inside fullscreen context. Removed the rule; container now owns all sizing via aspect-ratio + max-height: 75dvh.
+
+[x] Heart/save button drifting off-screen on desktop: caused by a global label { min-width: 80vw } rule. Removed the rule and restructured the button's parent to use flexbox justify-content: flex-end instead.
+
+[x] Video poster overflowing into text-container: ReactPlayer light prop rendered a poster that didn't respect the container's max-height, pushing the metadata card off screen. Replaced with a custom absolutely-positioned poster overlay (inset: 0, object-fit: cover) that stays fully inside the video container.
+
+[x] text-container disappearing on iPad-sized screens: tall videos with no max-height consumed the full viewport. Added max-height: 75dvh to the video container so at least 25% of the viewport is always reserved for the metadata card below.
+
+[x] GSAP "target null not found" firing every ~4000ms: accountRef was declared and passed to gsap.to() inside a setInterval but was never attached to any JSX element. Removed the entire dead-code block (accountRef, interval, state, GSAP effect, and gsap import).
+
+Resume / Session Feature
+[x] Save continuation token with bookmarks: resumeToken and browseUsername are now persisted on every saved tweet in Firestore, enabling the user to resume browsing from the exact point where they saved a video.
+
+[x] Resume sessions component on feed CTA: the empty-feed screen now shows a horizontal scroll strip of saved sessions as poster cards with @username and a relative timestamp. Sessions older than 6 hours show an amber ⚠ stale indicator.
+
+[x] "Continue browsing" strip on bookmark cards: each BookmarkCard with a saved resumeToken shows a tappable strip below the card — "Continue browsing @username from here" — that resumes the feed and navigates to /.
+
+[x] Expired token error handling: if resumeFeed returns 0 results (token expired), a dismissable banner appears — "Session expired — start fresh from @username?" — with Start fresh / Dismiss actions.
+
+[x] Resume info slide: when a feed is resumed via a continuation token, Swiper prepends an info slide at virtualIndex 0 explaining that these are not the user's most recent posts. Swiper initialises at slide 1 so the user lands on the first video; swiping left reveals the info card with a "Load most recent posts" button. virtualIndex offset applied (+1) so tweet slides don't collide with the info slide.
+
+Bookmarks / Playlist
+[x] Playlist mode: Bookmarks now has a Play All button that enters a full-screen playlist view — tap to play/pause, scrubber, speed control (0.1–2×), skip forward/back, and native fullscreen. Controls auto-hide after 3 s and reappear on tap.
+
+AI Personas
+[x] Persona builder: persona mode toggle in Settings collects text-only, non-retweet tweets as the user browses. A chip appears on the carousel showing a live count and collection strength (WEAK/MODERATE/STRONG, colour-coded). Once 40+ tweets are collected a "Build persona" button fires a Venice AI call that produces a detailed persona document (writing style, tone, themes, worldview, roleplay instructions) and saves it to Firestore.
+
+[x] Model selection: Settings fetches available Venice models via /listModels, filters out expensive (>$10/M output) and deprecated models, groups them into use-case categories (Persona & Roleplay, General Chat, Reasoning & Analysis, Technical & Code) using <optgroup>, and shows a cost-tier badge ($ / $$ / $$$) next to each model. Selected model is persisted in localStorage.
+
+[x] PersonaChat: full-screen chat interface at /chat/:username. Sends messages to /chatWithPersona Firebase Function, which injects the current date/time into the system prompt and roleplays as the persona. Supports Chat and Play tabs.
+
+[x] Chat persistence via Firebase RTDB: messages stored at /chats/{uid}/{username} and synced in real time via onValue listener. Conversations persist across devices and sessions. Security rules restrict read/write to the owning UID. Clear chat button removes the RTDB node.
+
+[x] Markdown rendering: AI responses rendered through react-markdown so lists, bold, code blocks, and headers display correctly.
+
+[x] Message timestamps: each message pushed to RTDB with a unix timestamp. Displayed below each bubble — time only for today, "Yesterday HH:MM" for yesterday, weekday name within the last week, "Mon DD HH:MM" for older. Model also receives the current date/time in the system prompt so it doesn't give temporally incorrect responses.
+
+[x] Play tab (scenario launcher): replaces the earlier Rewrite tab. On first open, calls /generateScenarios which asks the persona model to suggest 3 contextually relevant roleplay scenarios (title, description, opening line). Cards are tappable — selecting one clears the chat, pushes the persona's opener as the first message, and switches to the Chat tab. "Feeling Lucky" button picks a random scenario instantly. Retry button on error.
+
+[x] Vision in chat: paperclip button in the chat input opens an attach panel with two options — paste an image URL or upload a file. Uploaded files are compressed client-side via Canvas (max 1024px, JPEG 85%) before base64 encoding. Images are stored in the RTDB message and rendered in chat bubbles. The /chatWithPersona function detects image-bearing messages and builds OpenAI-compatible vision content arrays, auto-switching to qwen3-vl-235b-a22b if the selected model isn't vision-capable.
+
+[x] ToriiGate integration: separate /chatWithToriiGate Firebase Function routes chat through Hugging Face Inference API using Minthy/ToriiGate-v0.4-7B (multimodal, qwen2_vl-based). Supports vision content arrays, same persona system prompt, returns 503 with user-friendly message on model cold-start (HF 503).
+
+[x] Persona customisation: each persona in Settings has a pencil button that opens a bottom sheet editor. Users can upload a custom avatar (compressed to 256px) or paste an image URL, and set a display name. Changes write displayName and avatarUrl fields to Firestore via updatePersona. twitterAvatarUrl (the account's actual profile pic, captured at build time) is used as fallback when no custom avatar is set. Persona list rows and the PersonaChat header both respect the displayName → twitterAvatarUrl → icon priority chain.
+
+[x] Avatar tap-to-feed: tapping the persona avatar in the PersonaChat header calls retweetRequest(username) and navigates to / so the Carousel immediately starts loading that user's tweet feed.
+
+[x] Persona chip visibility: chip hides during video playback (same behaviour as the TweetVault logo and search button) and reappears on pause or mount. Chip position moved to match the logo/search button height. Chip text truncates with ellipsis on narrow screens via min-width: 0 + text-overflow: ellipsis flex chain.
+
+[x] Persona state reset on user navigation: username change useEffect resets personaBuilt, isBuildingPersona, isVideoPlaying, and autoFetchAttempts.current so the builder starts clean when navigating to a new profile via a retweet handle.
+
+Feed Bugs
+[x] Stale continuation token on retweet navigation: when the user tapped a retweet handle mid-chain, in-flight chained fetchTweets calls for the previous user completed after the new feed started and appended old tweets via setTweets(prev => [...prev, ...results]). Fixed with a requestGeneration ref that increments on every new feed request (getTweets, getSearchResults, retweetRequest, resumeFeed). Each fetchTweets/fetchSearchResults call captures the generation at call time and discards results in .then() if the generation has since advanced. continuationTokenRef.current is also cleared immediately on new feed requests to prevent handleReachEnd from firing with a stale token during the loading window.

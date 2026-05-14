@@ -4,8 +4,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+  overflow-x: hidden;
 }
 
 .top-image {
@@ -15,6 +15,306 @@
   max-width: 600px;
   object-fit: cover;
   display: block;
+}
+
+/* ── View mode row ──────────────────────────────────────────────────── */
+.bookmarks-view-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 600px;
+  padding: 10px 16px 0;
+  box-sizing: border-box;
+}
+
+.bookmarks-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.view-mode-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border-card);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.view-mode-toggle:hover {
+  border-color: var(--border-hot);
+  color: var(--text-primary);
+}
+
+.view-mode-toggle--active {
+  border-color: var(--border-hot);
+  color: var(--text-primary);
+  background: rgba(0, 242, 255, 0.08);
+}
+
+/* ── Playlist mode ──────────────────────────────────────────────────── */
+.playlist {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  width: 100%;
+  max-width: 750px;
+  margin: 0 auto;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.playlist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
+}
+
+.playlist-back-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px;
+  line-height: 1;
+}
+
+.playlist-counter {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.playlist-video-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  background: #000;
+  cursor: pointer;
+  display: flex;
+}
+
+.playlist-video {
+  width: 100%;
+  min-height: 0;
+  object-fit: contain;
+  display: block;
+}
+
+.playlist-tap-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: tap-flash 0.6s ease forwards;
+}
+
+.playlist-tap-icon i {
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.85);
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+}
+
+@keyframes tap-flash {
+  0%   { opacity: 1; transform: scale(0.8); }
+  40%  { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.3); }
+}
+
+.playlist-scrubber {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 0;
+  flex-shrink: 0;
+}
+
+.playlist-time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 32px;
+  text-align: center;
+}
+
+.playlist-range {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border-card);
+  outline: none;
+  cursor: pointer;
+}
+
+.playlist-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--pulse-start);
+  cursor: pointer;
+}
+
+.playlist-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: none;
+  background: var(--pulse-start);
+  cursor: pointer;
+}
+
+.playlist-meta {
+  padding: 12px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.playlist-username {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.playlist-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.playlist-tag {
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+.playlist-note {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.playlist-controls {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+}
+
+.playlist-controls button {
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  color: var(--text-primary);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.playlist-speed-btn {
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+  width: auto !important;
+  padding: 0 14px !important;
+  border-radius: var(--radius-dock) !important;
+}
+
+.playlist-controls button:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.playlist-controls button:not(:disabled):hover {
+  border-color: var(--border-hot);
+}
+
+/* ── Playlist overlay (controls hidden until interaction) ───────────── */
+.playlist-overlay {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.playlist-overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-mode-toggle,
+  .playlist-controls button {
+    transition: none;
+  }
+}
+
+/* ── Collection tabs ────────────────────────────────────────────────── */
+.bookmarks-tabs {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 10px 16px;
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+  scrollbar-width: none;
+}
+
+.bookmarks-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.bookmarks-tab {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border-card);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.bookmarks-tab--active {
+  border-color: var(--border-hot);
+  background: rgba(0, 242, 255, 0.08);
+  color: var(--text-primary);
 }
 
 /* ── Responsive ─────────────────────────────────────────────────────── */

@@ -9,6 +9,8 @@ import Onboarding from "./Components/Onboarding";
 const Carousel     = lazy(() => import("./Carousel"));
 const Bookmarks    = lazy(() => import("./Bookmarks"));
 const PhotoGallery = lazy(() => import("./PhotoGallery"));
+const Settings     = lazy(() => import("./Settings"));
+const PersonaChat  = lazy(() => import("./Components/PersonaChat"));
 
 export default function App() {
   const { authenticatedUser } = useContext(AuthContext);
@@ -34,6 +36,8 @@ export default function App() {
                 <Route index element={<Carousel />} />
                 <Route path="bookmarks" element={<Bookmarks />} />
                 <Route path="gallery" element={<PhotoGallery />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="chat/:username" element={<PersonaChat />} />
               </Routes>
             </Suspense>
           </div>

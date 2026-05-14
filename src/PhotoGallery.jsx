@@ -1,12 +1,20 @@
 import { useContext } from "react";
 import "./PhotoGallery.css";
 import { FirebaseContext } from "./FirebaseContext";
-import { IoTrashOutline } from "react-icons/io5";
 import { SkeletonGallery } from "./Components/Skeleton";
 import EmptyState from "./Components/EmptyState";
+import GalleryCard from "./Components/GalleryCard";
+import UserProfileSheet from "./Components/UserProfileSheet";
 
 export default function PhotoGallery() {
-  const { sortedImages, deleteImage, selectedImage, imageSelect, closeImage, isLoading } = useContext(FirebaseContext);
+  const {
+    sortedImages,
+    deleteImage,
+    selectedImage,
+    imageSelect,
+    closeImage,
+    isLoading,
+  } = useContext(FirebaseContext);
 
   if (isLoading) {
     return (
@@ -20,6 +28,7 @@ export default function PhotoGallery() {
   return (
     <div className="gallery-page">
       <h2 className="gallery-title">Gallery</h2>
+
       {sortedImages.length === 0 && (
         <EmptyState
           icon="fa-solid fa-photo-film"
@@ -27,28 +36,36 @@ export default function PhotoGallery() {
           body="Tap the heart on any image in the feed to save it to your gallery."
         />
       )}
+
       <div
         style={selectedImage === undefined ? { filter: "none" } : { filter: "blur(5px)" }}
         className="gallery"
       >
         {sortedImages.map((image, index) => (
-          <div key={image?.tweetId} onClick={() => imageSelect(index)}>
-            <img src={image?.imageUrl} alt="" />
-          </div>
+          <GalleryCard
+            key={image?._id}
+            image={image}
+            onOpenLightbox={() => imageSelect(index)}
+            onDelete={() => deleteImage(image?.tweetId)}
+            lightboxOpen={selectedImage !== undefined}
+          />
         ))}
       </div>
+
+      {/* Lightbox */}
       <div
         style={selectedImage === undefined ? { display: "none" } : { display: "flex" }}
         className="modal"
         onClick={closeImage}
       >
-        <button
-          onClick={(e) => { e.stopPropagation(); deleteImage(sortedImages[selectedImage]?.tweetId); }}
-        >
-          <IoTrashOutline size="22px" />
-        </button>
-        <img className="opened-image" src={sortedImages[selectedImage]?.imageUrl} alt="" />
+        <img
+          className="opened-image"
+          src={sortedImages[selectedImage]?.imageUrl}
+          alt=""
+        />
       </div>
+
+      <UserProfileSheet />
     </div>
   );
 }

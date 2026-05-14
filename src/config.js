@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { initializeFirestore, persistentLocalCache, getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database";
+import { getMessaging, isSupported } from "firebase/messaging";
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -20,5 +22,9 @@ try {
   db = getFirestore(app);
 }
 const auth = getAuth(app);
+const rtdb = getDatabase(app);
 
-export { db, auth };
+// Messaging is only available in browser contexts that support service workers
+const messagingPromise = isSupported().then((ok) => ok ? getMessaging(app) : null);
+
+export { db, auth, rtdb, messagingPromise };

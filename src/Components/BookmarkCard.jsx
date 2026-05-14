@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId, useContext } from "react";
+import { TweetContext } from "../TweetContext";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "./BookmarkCard.css";
 import VideoScrubber from "./VideoScrubber";
+import CollectionPicker from "./CollectionPicker";
 
 dayjs.extend(relativeTime);
 
@@ -12,14 +14,24 @@ function BookmarkCard({
   post,
   poster,
   username,
+  userId,
   timestamp,
   tags,
   note,
+  collectionName,
+  collections,
+  onMoveToCollection,
   delete_btn,
   request,
+  resumeToken,
+  browseUsername,
+  onResume,
 }) {
+  const { openProfileSheet } = useContext(TweetContext);
   const [shouldLoad, setShouldLoad] = useState(false);
+  const [showCollectionPicker, setShowCollectionPicker] = useState(false);
   const cardRef = useRef(null);
+  const cardId = useId();
 
   // isPlaying = true means PAUSED (controls visible), false means PLAYING (controls hidden)
   const [isPlaying, setIsPlaying] = useState(true);
@@ -90,11 +102,40 @@ function BookmarkCard({
     }
   }, [rate]);
 
+  // Pause when card scrolls out of view
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          const v = videoRef.current;
+          if (v && !v.paused) { v.pause(); setIsPlaying(true); }
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, []);
+
+  // Pause when another card starts playing
+  useEffect(() => {
+    function onOtherPlay(e) {
+      if (e.detail.id === cardId) return;
+      const v = videoRef.current;
+      if (v && !v.paused) { v.pause(); setIsPlaying(true); }
+    }
+    document.addEventListener("tv:videoplay", onOtherPlay);
+    return () => document.removeEventListener("tv:videoplay", onOtherPlay);
+  }, [cardId]);
+
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
       videoRef.current.play();
       setIsPlaying(false);
+      document.dispatchEvent(new CustomEvent("tv:videoplay", { detail: { id: cardId } }));
     } else {
       videoRef.current.pause();
       setIsPlaying(true);
@@ -107,6 +148,7 @@ function BookmarkCard({
   const hidden = { opacity: 0, pointerEvents: "none" };
 
   return (
+    <>
     <div
       ref={cardRef}
       className="card bookmark-card"
@@ -125,7 +167,10 @@ function BookmarkCard({
 
       <div
         className="video-overlay"
-        onClick={request}
+        onClick={userId
+          ? () => openProfileSheet(userId, username, poster)
+          : request
+        }
         style={isPlaying
           ? { position: "absolute", top: 0, right: 0, padding: 16, fontWeight: 300, zIndex: 99, cursor: "pointer" }
           : { position: "absolute", top: 0, right: 0, padding: 16, fontWeight: 300, zIndex: 99, cursor: "pointer", ...hidden }
@@ -141,7 +186,26 @@ function BookmarkCard({
           </div>
         )}
         {note && <small className="bookmark-note">{note}</small>}
+        <button
+          className="bookmark-collection-btn"
+          onClick={(e) => { e.stopPropagation(); setShowCollectionPicker(true); }}
+        >
+          <i className={collectionName ? "fa-solid fa-folder" : "fa-solid fa-folder-plus"} />
+          {collectionName && <span className="bookmark-collection-name">{collectionName}</span>}
+        </button>
       </div>
+
+      {showCollectionPicker && (
+        <CollectionPicker
+          currentCollection={collectionName}
+          collections={collections}
+          onDismiss={() => setShowCollectionPicker(false)}
+          onConfirm={(name) => {
+            onMoveToCollection(name);
+            setShowCollectionPicker(false);
+          }}
+        />
+      )}
 
       <div
         className="play-btn video-overlay"
@@ -179,8 +243,20 @@ function BookmarkCard({
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
         playsInline={true}
+        loop
       />
     </div>
+
+    {resumeToken && (
+      <button
+        className="bookmark-resume-strip"
+        onClick={() => onResume(browseUsername, resumeToken)}
+      >
+        <i className="fa-solid fa-arrow-right" />
+        <span>Continue browsing @{browseUsername} from here</span>
+      </button>
+    )}
+    </>
   );
 }
 

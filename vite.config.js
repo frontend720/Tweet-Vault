@@ -60,4 +60,7 @@ export default defineConfig({
     sourcemap: true,
   },
   base: './',
+  server: {
+    allowedHosts: ['jahs-macbook-air.tail8168ce.ts.net', '100.101.160.68'],
+  },
 })

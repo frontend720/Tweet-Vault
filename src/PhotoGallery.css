@@ -2,7 +2,7 @@
   background: var(--bg-primary);
   min-height: 100dvh;
   padding: 16px 12px 0;
-  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-top: 16px;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
