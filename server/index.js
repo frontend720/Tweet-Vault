@@ -1,4 +1,5 @@
 require("dotenv").config();
+const path = require("path");
 const express = require("express");
 const https = require("https");
 const http = require("http");
@@ -638,6 +639,12 @@ io.on("connection", (socket) => {
     io.to(`${uid}:${personaId}`).emit("chat_cleared");
   });
 });
+
+// ─── Static Frontend ──────────────────────────────────────────────────────────
+
+const DIST = path.join(__dirname, "../dist");
+app.use(express.static(DIST));
+app.get("*", (_req, res) => res.sendFile(path.join(DIST, "index.html")));
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 

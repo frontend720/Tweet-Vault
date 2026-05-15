@@ -1,0 +1,2 @@
+import{u as i,j as e}from"./index-BygSwO7M.js";function n({icon:t,title:s,body:a}){const c=i();return e.jsxs("div",{className:"empty-state",children:[e.jsx("div",{className:"empty-state__icon",children:e.jsx("i",{className:t})}),e.jsx("h2",{className:"empty-state__title",children:s}),e.jsx("p",{className:"empty-state__body",children:a}),e.jsx("button",{className:"empty-state__cta",onClick:()=>c("/"),children:"Browse the feed"})]})}export{n as E};
+//# sourceMappingURL=EmptyState-DYL-rMWv.js.map

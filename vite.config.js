@@ -59,8 +59,13 @@ export default defineConfig({
   build: {
     sourcemap: true,
   },
-  base: './',
+  base: '/',
   server: {
     allowedHosts: ['jahs-macbook-air.tail8168ce.ts.net', '100.101.160.68'],
+    proxy: {
+      '/api': 'http://apple-server.tail8168ce.ts.net:4500',
+      '/socket.io': { target: 'http://apple-server.tail8168ce.ts.net:4500', ws: true },
+      '/proxy': 'http://apple-server.tail8168ce.ts.net:4500',
+    },
   },
 })
