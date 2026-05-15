@@ -62,6 +62,8 @@ const TweetContextProvider = memo(({ children }) => {
   const [profileListLoading, setProfileListLoading] = useState(false);
   const profileListFetching = useRef(false);
 
+  const usernameRef = useRef("");
+
   const isFetching = useRef(false);
   const lastFetchedToken = useRef(null);
   const currentQuery = useRef(""); // persisted for continuation calls
@@ -124,10 +126,12 @@ const TweetContextProvider = memo(({ children }) => {
       const results = response?.data?.results ?? response?.data?.tweets ?? [];
       const token = response?.data?.continuation_token ?? response?.data?.next_cursor ?? null;
       continuationTokenRef.current = token;
+      const resolvedUsername = results?.[0]?.user?.username ?? username;
+      usernameRef.current = resolvedUsername;
       setTweets(results);
       setContinuationToken(token);
       accumulateTextTweets(results);
-      setUsername(results?.[0]?.user?.username ?? username);
+      setUsername(resolvedUsername);
       setIsInputVisible(false);
     } catch (error) {
       console.log(error);
@@ -177,6 +181,7 @@ const TweetContextProvider = memo(({ children }) => {
   async function resumeFeed(username, token) {
     setTweets([]);
     setIndex(0);
+    usernameRef.current = username;
     setUsername(username);
     setRunRequest(true);
     setNewRetweetRequest(true);
@@ -237,10 +242,12 @@ const TweetContextProvider = memo(({ children }) => {
       const results = response?.data?.results ?? response?.data?.tweets ?? [];
       const token = response?.data?.continuation_token ?? response?.data?.next_cursor ?? null;
       continuationTokenRef.current = token;
+      const resolvedUsername = results?.[0]?.user?.username ?? retweeted_from;
+      usernameRef.current = resolvedUsername;
       setTweets(results);
       setContinuationToken(token);
       accumulateTextTweets(results);
-      setUsername(results?.[0]?.user?.username ?? retweeted_from);
+      setUsername(resolvedUsername);
       setLoadingText("");
     } catch (error) {
       console.log(error);
@@ -261,7 +268,7 @@ const TweetContextProvider = memo(({ children }) => {
     axios({
       method: "GET",
       url: "https://twitter154.p.rapidapi.com/user/tweets/continuation",
-      params: { username, continuation_token: token, include_replies: false },
+      params: { username: usernameRef.current, continuation_token: token, include_replies: false },
       referrerPolicy: "no-referrer",
       headers: RAPIDAPI_HEADERS,
     })
