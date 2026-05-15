@@ -15,7 +15,7 @@ require("dotenv").config();
 const admin = require("firebase-admin");
 const db = require("./db");
 
-if (!admin.apps.length) admin.initializeApp();
+if (!admin.apps.length) admin.initializeApp({ databaseURL: process.env.FIREBASE_DATABASE_URL });
 
 const firestore = admin.firestore();
 const rtdb = admin.database();
