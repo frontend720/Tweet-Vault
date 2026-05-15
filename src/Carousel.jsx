@@ -97,7 +97,7 @@ function Carousel() {
     if (isBuildingPersona || !username) return;
     setIsBuildingPersona(true);
     try {
-      const functionsBase = new URL(import.meta.env.VITE_FUNCTION_URL).origin;
+      const functionsBase = import.meta.env.VITE_FUNCTION_URL ? new URL(import.meta.env.VITE_FUNCTION_URL).origin : "";
       const res = await fetch(`${functionsBase}/buildPersona`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

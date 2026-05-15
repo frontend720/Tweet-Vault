@@ -317,7 +317,7 @@ function PersonaEditSheet({ persona, onSave, onClose }) {
   );
 }
 
-const FUNCTIONS_BASE = new URL(import.meta.env.VITE_FUNCTION_URL).origin;
+const FUNCTIONS_BASE = import.meta.env.VITE_FUNCTION_URL ? new URL(import.meta.env.VITE_FUNCTION_URL).origin : "";
 const DEFAULT_MODEL = "venice-uncensored-1-2";
 
 export default function Settings() {
