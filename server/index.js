@@ -649,4 +649,13 @@ app.get("*", (_req, res) => res.sendFile(path.join(DIST, "index.html")));
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 4500;
-httpServer.listen(PORT, () => console.log(`Tweet Vault server listening on :${PORT}`));
+httpServer.listen(PORT, () => {
+  console.log(`Tweet Vault server listening on :${PORT}`);
+  const counts = {
+    bookmarks: db.prepare("SELECT COUNT(*) as n FROM bookmarks").get().n,
+    photos:    db.prepare("SELECT COUNT(*) as n FROM photos").get().n,
+    personas:  db.prepare("SELECT COUNT(*) as n FROM personas").get().n,
+    chats:     db.prepare("SELECT COUNT(*) as n FROM chat_messages").get().n,
+  };
+  console.log("DB:", counts);
+});
