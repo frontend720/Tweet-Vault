@@ -9,7 +9,17 @@ const db = require("./db");
 const { admin, requireAuth } = require("./auth");
 
 const app = express();
-const httpServer = http.createServer(app);
+
+const fs = require("fs");
+const CERT_DIR = process.env.CERT_DIR || path.join(__dirname, "..");
+const certPath = path.join(CERT_DIR, "apple-server.tail8168ce.ts.net.crt");
+const keyPath  = path.join(CERT_DIR, "apple-server.tail8168ce.ts.net.key");
+const useTLS   = fs.existsSync(certPath) && fs.existsSync(keyPath);
+
+const httpServer = useTLS
+  ? https.createServer({ cert: fs.readFileSync(certPath), key: fs.readFileSync(keyPath) }, app)
+  : http.createServer(app);
+
 const io = new IOServer(httpServer, { cors: { origin: "*" } });
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
