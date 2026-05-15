@@ -6,6 +6,7 @@ import { AuthContext } from "./AuthContext";
 const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? "";
 
 async function api(method, path, body) {
+  await auth.authStateReady();
   const token = await auth.currentUser?.getIdToken();
   const res = await fetch(`${SERVER_URL}${path}`, {
     method,
