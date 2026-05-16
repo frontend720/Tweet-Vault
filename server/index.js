@@ -1,5 +1,5 @@
-require("dotenv").config();
 const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env"), override: true });
 const express = require("express");
 const https = require("https");
 const http = require("http");
@@ -9,6 +9,13 @@ const db = require("./db");
 const { admin, requireAuth } = require("./auth");
 
 const app = express();
+
+process.on("unhandledRejection", (err) => {
+  console.error("[unhandledRejection]", err);
+});
+process.on("uncaughtException", (err) => {
+  console.error("[uncaughtException]", err);
+});
 
 const fs = require("fs");
 const CERT_DIR = process.env.CERT_DIR || path.join(__dirname, "..");
