@@ -553,6 +553,69 @@ app.delete("/api/chat/:personaId", requireAuth, (req, res) => {
 
 // ─── Notification Settings ────────────────────────────────────────────────────
 
+app.post("/testChatNotification", async (req, res) => {
+  const { fcmToken, email } = req.body;
+  if (!fcmToken || !email) return res.status(400).json({ error: "fcmToken and email are required" });
+
+  try {
+    const personas = db.prepare("SELECT * FROM personas WHERE user_id = (SELECT uid FROM (SELECT user_id as uid FROM notification_settings WHERE email = ?) LIMIT 1)").all(email);
+
+    if (!personas.length) {
+      await admin.messaging().send({
+        token: fcmToken,
+        notification: { title: "TweetVault", body: "Push notifications are working!" },
+        webpush: { fcmOptions: { link: "/" } },
+      });
+      return res.json({ success: true, type: "generic" });
+    }
+
+    const uid = personas[0].user_id;
+    let chosenPersona = null;
+    let recentMessages = [];
+
+    const shuffled = personas.sort(() => Math.random() - 0.5);
+    for (const p of shuffled) {
+      const msgs = db.prepare("SELECT * FROM chat_messages WHERE user_id = ? AND persona_id = ? ORDER BY timestamp DESC LIMIT 4").all(uid, p.id);
+      if (msgs.length) {
+        recentMessages = msgs.reverse();
+        chosenPersona = p;
+        break;
+      }
+    }
+    if (!chosenPersona) chosenPersona = shuffled[0];
+
+    const history = recentMessages.map((m) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content || "" }));
+    const systemPrompt = `You are roleplaying as @${chosenPersona.username}. ${chosenPersona.summary}\n\nWrite ONE short, in-character message (1-2 sentences max) as if you're reaching out to continue a conversation or start a new one. Sound like a casual text message.`;
+
+    let body;
+    try {
+      body = await veniceChat([
+        { role: "system", content: systemPrompt },
+        ...history,
+        { role: "user", content: "[Send a short re-engagement message now.]" },
+      ], "venice-uncensored-1-2", 0.9);
+    } catch {
+      body = "Hey, you around? We should pick up where we left off.";
+    }
+
+    const displayName = chosenPersona.display_name ?? `@${chosenPersona.username}`;
+    const icon = chosenPersona.avatar_url ?? chosenPersona.twitter_avatar_url ?? "/icon.svg";
+    await admin.messaging().send({
+      token: fcmToken,
+      notification: { title: displayName, body: (body ?? "").slice(0, 200) },
+      data: { chatUsername: chosenPersona.username, personaId: chosenPersona.id },
+      webpush: {
+        notification: { icon, badge: "/icon.svg" },
+        fcmOptions: { link: `/chat/${chosenPersona.username}?pid=${chosenPersona.id}` },
+      },
+    });
+    res.json({ success: true, persona: displayName });
+  } catch (err) {
+    console.error("testChatNotification error:", err);
+    res.status(500).json({ error: err.message ?? "Internal error" });
+  }
+});
+
 app.get("/api/settings/notifications", requireAuth, (req, res) => {
   const row = db.prepare("SELECT * FROM notification_settings WHERE user_id = ?").get(req.uid);
   if (!row) return res.json({ enabled: false, frequency: 1 });
@@ -662,6 +725,83 @@ io.on("connection", (socket) => {
 const DIST = path.join(__dirname, "../dist");
 app.use(express.static(DIST));
 app.get("/{*splat}", (_req, res) => res.sendFile(path.join(DIST, "index.html")));
+
+// ─── Chat Re-engagement Scheduler ────────────────────────────────────────────
+
+async function sendChatReengagement() {
+  const now = Date.now();
+  const IDLE_MS = 6 * 60 * 60 * 1000;
+
+  const users = db.prepare(
+    "SELECT * FROM notification_settings WHERE enabled = 1 AND fcm_token IS NOT NULL"
+  ).all();
+
+  await Promise.allSettled(users.map(async (settings) => {
+    const { user_id: uid, fcm_token: fcmToken, frequency = 1, last_notified_at: lastNotifiedAt = 0 } = settings;
+
+    const minGapMs = (24 / frequency) * 60 * 60 * 1000;
+    if (now - lastNotifiedAt < minGapMs) return;
+
+    const idleChats = db.prepare(`
+      SELECT persona_id, MAX(timestamp) as last_timestamp
+      FROM chat_messages
+      WHERE user_id = ?
+      GROUP BY persona_id
+      HAVING MAX(timestamp) < ?
+    `).all(uid, now - IDLE_MS);
+
+    if (!idleChats.length) return;
+
+    const chat = idleChats[Math.floor(Math.random() * idleChats.length)];
+    const persona = db.prepare("SELECT * FROM personas WHERE id = ? AND user_id = ?").get(chat.persona_id, uid);
+    if (!persona) return;
+
+    const recent = db.prepare(
+      "SELECT * FROM chat_messages WHERE user_id = ? AND persona_id = ? ORDER BY timestamp DESC LIMIT 6"
+    ).all(uid, chat.persona_id).reverse();
+
+    const history = recent.map((m) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content || "" }));
+    const systemPrompt = `You are roleplaying as @${persona.username}. ${persona.summary}\n\nThe user hasn't replied in a while. Write ONE short, in-character message (1-2 sentences max) inviting them back to the conversation. Reference something from the recent chat context. Sound natural — like a text message, not a notification.`;
+
+    let reengagementMsg;
+    try {
+      reengagementMsg = await veniceChat([
+        { role: "system", content: systemPrompt },
+        ...history,
+        { role: "user", content: "[The user has been away for a while. Send a re-engagement message now.]" },
+      ], "venice-uncensored-1-2", 0.9);
+    } catch (err) {
+      console.error("Venice re-engagement error:", err);
+      return;
+    }
+    if (!reengagementMsg) return;
+
+    const displayName = persona.display_name ?? `@${persona.username}`;
+    const icon = persona.avatar_url ?? persona.twitter_avatar_url ?? "/icon.svg";
+
+    try {
+      await admin.messaging().send({
+        token: fcmToken,
+        notification: { title: displayName, body: reengagementMsg.slice(0, 200) },
+        data: { chatUsername: persona.username, personaId: persona.id },
+        webpush: {
+          notification: { icon, badge: "/icon.svg" },
+          fcmOptions: { link: `/chat/${persona.username}?pid=${persona.id}` },
+        },
+      });
+      db.prepare("UPDATE notification_settings SET last_notified_at = ? WHERE user_id = ?").run(now, uid);
+    } catch (err) {
+      console.error("FCM send error:", err);
+      if (err.code === "messaging/registration-token-not-registered") {
+        db.prepare("UPDATE notification_settings SET enabled = 0, fcm_token = NULL WHERE user_id = ?").run(uid);
+      }
+    }
+  }));
+}
+
+setInterval(() => {
+  sendChatReengagement().catch((err) => console.error("sendChatReengagement error:", err));
+}, 60 * 60 * 1000);
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
