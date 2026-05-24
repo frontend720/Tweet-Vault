@@ -10,6 +10,7 @@ function AuthStateContextProvider({children}){
     useEffect(() => {
         onAuthStateChanged(auth, (user) => {
             setEmail(user.email)
+            console.log(user.uid)
         })
     }, [])
     return(

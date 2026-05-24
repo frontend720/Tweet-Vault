@@ -1,4 +1,5 @@
 import { useState, useContext, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { TweetContext } from "../TweetContext";
 import "./GalleryCard.css";
 
@@ -9,6 +10,7 @@ export default function GalleryCard({ image, onOpenLightbox, onDelete, lightboxO
     if (!lightboxOpen) setFlipped(false);
   }, [lightboxOpen]);
   const { retweetRequest, openProfileSheet } = useContext(TweetContext);
+  const navigate = useNavigate();
 
   const hasUser = !!image.username;
 
@@ -24,6 +26,7 @@ export default function GalleryCard({ image, onOpenLightbox, onDelete, lightboxO
   function handleLoadFeed(e) {
     e.stopPropagation();
     retweetRequest(image.username);
+    navigate("/");
   }
 
   function handleProfile(e) {

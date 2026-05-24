@@ -1,29 +1,24 @@
 import { useState, useEffect, createContext } from "react";
 import { auth } from "./config";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signOut,
-  signInWithPopup,
-} from "firebase/auth";
+import { signUp, signIn, signOut, onAuthStateChanged, getCurrentUser } from "@jah-cloud/auth";
 
 const AuthContext = createContext();
-const googleProvider = new GoogleAuthProvider();
 
 const AuthContextProvider = ({ children }) => {
   const [error, setError] = useState("");
   const [authenticatedUser, setAuthenticatedUser] = useState(() => {
     try {
-      const savedUser = localStorage.getItem("authenticated-user");
-      return savedUser !== null ? JSON.parse(savedUser) : null;
+      const saved = localStorage.getItem("authenticated-user");
+      return saved !== null ? JSON.parse(saved) : null;
     } catch {
       return null;
     }
   });
 
   useEffect(() => {
+    // Rehydrate session from refresh cookie, then unblock FirebaseContext.api()
+    getCurrentUser(auth).finally(() => auth._markReady());
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setAuthenticatedUser(user.email);
@@ -37,56 +32,23 @@ const AuthContextProvider = ({ children }) => {
   }, []);
 
   async function createUser(email, password) {
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      if (error.code === "auth/invalid-email") {
-        setError("Must provide a valid E-mail to continue");
-      } else {
-        setError(error.message);
-      }
-    }
+    const { error: err } = await signUp(auth, email, password);
+    if (err) setError(err.message);
   }
 
   async function returningUser(email, password) {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      if (error.code === "auth/invalid-email") {
-        setError("Must provide a valid E-mail to continue");
-      } else {
-        setError(error.message);
-      }
-    }
-  }
-
-  async function signInWithGoogle() {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.log(error);
+    const { error: err } = await signIn(auth, email, password);
+    if (err) {
+      setError(err.code === "auth/invalid-credentials" ? "Invalid email or password" : err.message);
     }
   }
 
   async function logout() {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.log(error);
-    }
+    await signOut(auth);
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        authenticatedUser,
-        createUser,
-        returningUser,
-        signInWithGoogle,
-        logout,
-        error,
-      }}
-    >
+    <AuthContext.Provider value={{ authenticatedUser, createUser, returningUser, logout, error }}>
       {children}
     </AuthContext.Provider>
   );

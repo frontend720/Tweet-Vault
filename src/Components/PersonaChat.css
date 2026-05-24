@@ -215,7 +215,7 @@
 
 .pchat-form-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 8px;
 }
 
@@ -223,12 +223,16 @@
   flex: 1;
   background: var(--surface-card);
   border: 1px solid var(--border-card);
-  border-radius: 22px;
+  border-radius: 18px;
   padding: 10px 16px;
   font-family: var(--font-body);
   font-size: 14px;
+  line-height: 1.43;
   color: var(--text-primary);
   outline: none;
+  resize: none;
+  overflow-y: auto;
+  max-height: 83px;
   transition: border-color 0.15s ease;
 }
 

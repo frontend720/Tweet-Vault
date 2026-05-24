@@ -56,6 +56,9 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    preserveSymlinks: true,
+  },
   build: {
     sourcemap: true,
   },

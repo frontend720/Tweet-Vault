@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s https://letsencrypt.org/certs/lets-encrypt-e7.pem -o /tmp/e7-intermediate.pem)",
+      "Read(//tmp/**)",
+      "Bash(curl -s \"https://letsencrypt.org/certs/2024/e7.pem\" -o /tmp/e7-intermediate.pem)",
+      "Read(//private/tmp/**)",
+      "Bash(curl -s \"https://letsencrypt.org/certs/e7-cross.pem\" -o /tmp/e7-cross.pem)",
+      "Bash(openssl crl2pkcs7 *)",
+      "Bash(openssl pkcs7 *)",
+      "Bash(cp /Volumes/Home/Tweet-Vault/apple-server.tail8168ce.ts.net.crt /Volumes/Home/Tweet-Vault/apple-server.tail8168ce.ts.net.crt.bak *)",
+      "Bash(curl -s http://localhost:4500/listModels)",
+      "Bash(node -e ' *)",
+      "Bash(npx eslint *)",
+      "Bash(rsync -a --delete /Users/jahanthony/jahs-projects/tweet-vault/dist/ /Volumes/Home/Tweet-Vault/dist/)",
+      "Bash(ssh apple-server *)",
+      "Bash(ssh -o StrictHostKeyChecking=no apple-server \"sqlite3 /Volumes/Home/data/vault.sqlite 'SELECT browse_username, COUNT\\(*\\), COUNT\\(resume_token\\) FROM bookmarks GROUP BY browse_username LIMIT 20'\")",
+      "Bash(grep -v \"^$\")",
+      "Bash(ssh jahanthony@100.86.60.105 \"cd /Users/jahanthony/Tweet-Vault && pm2 restart tweet-vault 2>&1\")",
+      "Bash(ssh -o StrictHostKeyChecking=no jahanthony@100.86.60.105 \"cd /Users/jahanthony/Tweet-Vault && pm2 restart tweet-vault 2>&1\")",
+      "Bash(cp -r /Users/jahanthony/jahs-projects/tweet-vault/dist/* /Volumes/Home/Tweet-Vault/dist/)",
+      "Bash(cp /Users/jahanthony/jahs-projects/tweet-vault/server/auth.js /Volumes/Home/Tweet-Vault/server/auth.js)",
+      "Bash(cp /Users/jahanthony/jahs-projects/tweet-vault/server/index.js /Volumes/Home/Tweet-Vault/server/index.js)",
+      "Bash(cp -r /Users/jahanthony/jahs-projects/tweet-vault/server/node_modules/jsonwebtoken /Volumes/Home/Tweet-Vault/server/node_modules/jsonwebtoken)",
+      "Bash(cp /Users/jahanthony/jahs-projects/tweet-vault/server/package.json /Volumes/Home/Tweet-Vault/server/package.json)",
+      "Bash(sqlite3 /Volumes/Home/data/vault.sqlite \"SELECT DISTINCT user_id FROM bookmarks LIMIT 1\")",
+      "Bash(sqlite3 \"/Volumes/Home/data/vault.sqlite\" \"SELECT DISTINCT user_id FROM bookmarks LIMIT 1\")"
+    ],
+    "additionalDirectories": [
+      "/private/tmp",
+      "/Users/jahanthony/jahs-projects/Vault/packages/core",
+      "/Users/jahanthony/jahs-projects/Vault/packages/auth",
+      "/Volumes/Home/Tweet-Vault/server"
+    ]
+  }
+}

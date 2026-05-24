@@ -6,6 +6,7 @@ const http = require("http");
 const { Server: IOServer } = require("socket.io");
 const { v4: uuidv4 } = require("uuid");
 const db = require("./db");
+const jwt = require("jsonwebtoken");
 const { admin, requireAuth } = require("./auth");
 
 const app = express();
@@ -131,9 +132,26 @@ function buildVisionMessages(messages) {
 // ─── AI Routes ────────────────────────────────────────────────────────────────
 
 app.post("/buildPersona", async (req, res) => {
-  const { tweets, username, model } = req.body;
+  const { tweets, username, model, mediaUrls } = req.body;
   if (!tweets?.length || !username) {
     return res.status(400).json({ error: "Missing tweets or username" });
+  }
+
+  let mediaStyleSection = "";
+  if (mediaUrls?.length) {
+    try {
+      const imageContent = mediaUrls.map((url) => ({ type: "image_url", image_url: { url } }));
+      const analysis = await veniceChat([{
+        role: "user",
+        content: [
+          { type: "text", text: `These are sample images and video thumbnails shared by @${username} on Twitter/X. In 2-3 sentences describe the types of visual content they share — subject matter, aesthetic, mood, whether it's personal photos, memes, sports highlights, art, news graphics, etc.` },
+          ...imageContent,
+        ],
+      }], "qwen3-5-9b", 0.3);
+      if (analysis) mediaStyleSection = `\nMEDIA STYLE: ${analysis.trim()}`;
+    } catch (err) {
+      console.error("buildPersona media analysis error (skipping):", err.message);
+    }
   }
 
   const tweetList = tweets.map((t, i) => `${i + 1}. ${t}`).join("\n");
@@ -145,7 +163,7 @@ app.post("/buildPersona", async (req, res) => {
       { role: "user", content: userPrompt },
     ], model, 0.5);
     if (!summary) throw new Error("Empty response");
-    res.json({ summary });
+    res.json({ summary: summary + mediaStyleSection });
   } catch (err) {
     console.error("buildPersona error:", err);
     const status = err.veniceStatus === 429 ? 503 : 500;
@@ -529,6 +547,105 @@ app.delete("/api/personas/:id", requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+app.post("/api/personas/:id/refresh", requireAuth, async (req, res) => {
+  const { model } = req.body ?? {};
+  const persona = db.prepare("SELECT * FROM personas WHERE id = ? AND user_id = ?").get(req.params.id, req.uid);
+  if (!persona) return res.status(404).json({ error: "Not found" });
+
+  const tokenRow = db.prepare(
+    "SELECT resume_token FROM bookmarks WHERE user_id = ? AND LOWER(browse_username) = LOWER(?) AND resume_token IS NOT NULL ORDER BY timestamp ASC LIMIT 1"
+  ).get(req.uid, persona.username);
+  console.log("[persona refresh] username:", persona.username, "token found:", !!tokenRow?.resume_token);
+
+  const rapidApiKey = process.env.RAPIDAPI_KEY;
+  if (!rapidApiKey) return res.status(500).json({ error: "RAPIDAPI_KEY not configured" });
+
+  const seenIds = new Set();
+  const allTweets = [];
+  const HEADERS = { "x-rapidapi-key": rapidApiKey, "x-rapidapi-host": "twitter154.p.rapidapi.com" };
+  const MAX_PAGES = 5;
+
+  const collectTweets = (results) => {
+    for (const t of results) {
+      if (t.tweet_id && !seenIds.has(t.tweet_id)) {
+        seenIds.add(t.tweet_id);
+        allTweets.push(t);
+      }
+    }
+  };
+
+  // Paginate /user/tweets/continuation until no token or page cap
+  const fetchContinuationPages = async (startToken, label) => {
+    let token = startToken;
+    for (let page = 0; page < MAX_PAGES && token; page++) {
+      try {
+        const url = new URL("https://twitter154.p.rapidapi.com/user/tweets/continuation");
+        url.searchParams.set("username", persona.username);
+        url.searchParams.set("continuation_token", token);
+        url.searchParams.set("limit", "40");
+        const r = await fetch(url.toString(), { headers: HEADERS });
+        console.log(`[persona refresh] ${label} page ${page + 1} status:`, r.status);
+        if (!r.ok) break;
+        const data = await r.json();
+        const results = data.results ?? data.tweets ?? [];
+        collectTweets(results);
+        token = data.continuation_token ?? data.next_cursor ?? null;
+        if (results.length === 0 || token === startToken) break;
+      } catch (err) {
+        console.error(`persona refresh ${label} fetch error:`, err.message);
+        break;
+      }
+    }
+  };
+
+  // Always fetch the latest tweets from the top of the timeline, then paginate
+  try {
+    const url = new URL("https://twitter154.p.rapidapi.com/user/tweets");
+    url.searchParams.set("username", persona.username);
+    url.searchParams.set("limit", "40");
+    url.searchParams.set("include_replies", "false");
+    const r = await fetch(url.toString(), { headers: HEADERS });
+    console.log("[persona refresh] fresh fetch status:", r.status);
+    if (r.ok) {
+      const data = await r.json();
+      collectTweets(data.results ?? data.tweets ?? []);
+      const freshToken = data.continuation_token ?? data.next_cursor ?? null;
+      if (freshToken) await fetchContinuationPages(freshToken, "fresh-continuation");
+    }
+  } catch (err) {
+    console.error("persona refresh fresh fetch error:", err.message);
+  }
+
+  // Also paginate from the saved resume token
+  if (tokenRow?.resume_token) {
+    await fetchContinuationPages(tokenRow.resume_token, "saved-token");
+  }
+
+  const newTextTweets = allTweets.filter((t) => t.text && !t.retweet_status).map((t) => t.text);
+  console.log("[persona refresh] total unique text tweets:", newTextTweets.length);
+
+  if (allTweets.length === 0) return res.json({ updated: false, reason: "fetch_failed" });
+
+  if (newTextTweets.length < 5) return res.json({ updated: false, reason: "insufficient_content", count: newTextTweets.length });
+
+  const tweetList = newTextTweets.map((t, i) => `${i + 1}. ${t}`).join("\n");
+  const updatePrompt = `You previously wrote this persona document for @${persona.username}:\n\n${persona.summary}\n\nHere are ${newTextTweets.length} newer tweets from the same person:\n\n${tweetList}\n\nUpdate the persona document to incorporate any new patterns, phrases, or themes revealed by the new tweets. Keep the same sections. Preserve what's still accurate. Only modify what the new tweets genuinely change or reinforce.`;
+
+  try {
+    const updatedSummary = await veniceChat([
+      { role: "system", content: "You are an expert at analyzing writing styles and producing detailed persona documents for AI roleplay." },
+      { role: "user", content: updatePrompt },
+    ], model ?? "venice-uncensored-1-2", 0.5);
+    if (!updatedSummary) return res.json({ updated: false, reason: "empty_response" });
+    db.prepare("UPDATE personas SET summary = ?, tweet_count = tweet_count + ? WHERE id = ? AND user_id = ?")
+      .run(updatedSummary, newTextTweets.length, req.params.id, req.uid);
+    res.json({ updated: true, summary: updatedSummary, count: newTextTweets.length });
+  } catch (err) {
+    console.error("persona refresh rebuild error:", err.message);
+    res.json({ updated: false, reason: "rebuild_error" });
+  }
+});
+
 // ─── Chat Messages ────────────────────────────────────────────────────────────
 
 app.get("/api/chat/:personaId", requireAuth, (req, res) => {
@@ -682,8 +799,9 @@ io.use(async (socket, next) => {
   const token = socket.handshake.auth?.token;
   if (!token) return next(new Error("Missing auth token"));
   try {
-    const decoded = await admin.auth().verifyIdToken(token);
-    socket.uid = decoded.uid;
+    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    if (decoded.type !== "access") throw new Error("Wrong token type");
+    socket.uid = decoded.sub;
     next();
   } catch {
     next(new Error("Invalid token"));

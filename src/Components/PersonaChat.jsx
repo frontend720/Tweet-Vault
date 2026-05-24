@@ -3,6 +3,7 @@ import { useLocation, useParams, useNavigate, useSearchParams } from "react-rout
 import ReactMarkdown from "react-markdown";
 import { io } from "socket.io-client";
 import { auth } from "../config";
+import { getIdToken } from "@jah-cloud/auth";
 import { TweetContext } from "../TweetContext";
 import { FirebaseContext } from "../FirebaseContext";
 import { AuthContext } from "../AuthContext";
@@ -64,9 +65,9 @@ export default function PersonaChat() {
     if (persona) { setPersonaLoading(false); return; }
     const pid = searchParams.get("pid");
     if (!pid || !authenticatedUser) { setPersonaLoading(false); return; }
-    auth.currentUser?.getIdToken()
-      .then((token) => fetch(`${SERVER_URL}/api/personas/${pid}`, {
-        headers: { Authorization: `Bearer ${token}` },
+    getIdToken(auth)
+      .then(({ data }) => fetch(`${SERVER_URL}/api/personas/${pid}`, {
+        headers: { Authorization: `Bearer ${data?.token}` },
       }))
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data) setPersona(data); })
@@ -94,6 +95,7 @@ export default function PersonaChat() {
 
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const formRef = useRef(null);
   const fileInputRef = useRef(null);
   const socketRef = useRef(null);
 
@@ -102,14 +104,16 @@ export default function PersonaChat() {
     if (!persona?._id) return;
 
     let socket;
-    auth.currentUser?.getIdToken().then((token) => {
-      socket = io(SERVER_URL, { auth: { token } });
+    getIdToken(auth).then(({ data }) => {
+      socket = io(SERVER_URL, { auth: { token: data?.token } });
       socketRef.current = socket;
 
-      socket.emit("join_chat", persona._id);
+      socket.on("connect_error", (err) => console.error("[socket] connect error:", err.message));
+      socket.on("connect", () => socket.emit("join_chat", persona._id));
 
       socket.on("chat_history", (history) => setMessages(history));
-      socket.on("new_message", (msg) => setMessages((prev) => [...prev, msg]));
+      // new_message is only used for real-time sync to other open tabs/sessions.
+      // All state for this session is managed directly via setMessages — no handler needed here.
       socket.on("chat_cleared", () => setMessages([]));
     });
 
@@ -159,7 +163,11 @@ export default function PersonaChat() {
   }
 
   function clearChat() {
-    socketRef.current?.emit("clear_chat", persona._id);
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("clear_chat", persona._id);
+    } else {
+      setMessages([]);
+    }
   }
 
   async function handleFileSelect(e) {
@@ -185,12 +193,16 @@ export default function PersonaChat() {
     if ((!text && !attachedImage) || isLoading) return;
 
     setInput("");
+    if (inputRef.current) { inputRef.current.style.height = "auto"; }
     const imageUrl = attachedImage;
     setAttachedImage(null);
     setShowAttachPanel(false);
     setIsLoading(true);
 
-    const userMsg = { role: "user", content: text, ...(imageUrl && { imageUrl }) };
+    const userMsg = { role: "user", content: text, ...(imageUrl && { imageUrl }), timestamp: Date.now() };
+
+    // Always show immediately; emit via socket for persistence only
+    setMessages((prev) => [...prev, userMsg]);
     socketRef.current?.emit("send_message", { personaId: persona._id, ...userMsg });
 
     const history = [...messages, userMsg];
@@ -209,19 +221,15 @@ export default function PersonaChat() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Something went wrong.");
       if (data.message) {
-        socketRef.current?.emit("send_message", {
-          personaId: persona._id,
-          role: "assistant",
-          content: data.message,
-        });
+        const aiMsg = { role: "assistant", content: data.message, timestamp: Date.now() };
+        setMessages((prev) => [...prev, aiMsg]);
+        socketRef.current?.emit("send_message", { personaId: persona._id, ...aiMsg });
       }
     } catch (err) {
       console.error("Chat error:", err);
-      socketRef.current?.emit("send_message", {
-        personaId: persona._id,
-        role: "assistant",
-        content: err.message ?? "Something went wrong. Try again.",
-      });
+      const errMsg = { role: "assistant", content: err.message ?? "Something went wrong. Try again.", timestamp: Date.now() };
+      setMessages((prev) => [...prev, errMsg]);
+      socketRef.current?.emit("send_message", { personaId: persona._id, ...errMsg });
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -230,13 +238,10 @@ export default function PersonaChat() {
 
   async function selectScenario(scenario) {
     clearChat();
-    // Brief delay so the clear propagates before we send the opener
     await new Promise((r) => setTimeout(r, 100));
-    socketRef.current?.emit("send_message", {
-      personaId: persona._id,
-      role: "assistant",
-      content: scenario.opener,
-    });
+    const openerMsg = { role: "assistant", content: scenario.opener, timestamp: Date.now() };
+    setMessages([openerMsg]);
+    socketRef.current?.emit("send_message", { personaId: persona._id, ...openerMsg });
     setMode("chat");
   }
 
@@ -327,7 +332,7 @@ export default function PersonaChat() {
             <div ref={bottomRef} />
           </div>
 
-          <form className="pchat-form" onSubmit={sendMessage}>
+          <form ref={formRef} className="pchat-form" onSubmit={sendMessage}>
             {showAttachPanel && (
               <div className="pchat-attach-panel">
                 <div className="pchat-attach-panel__url-row">
@@ -395,11 +400,22 @@ export default function PersonaChat() {
               >
                 <i className="fa-solid fa-paperclip" />
               </button>
-              <input
+              <textarea
                 ref={inputRef}
                 className="pchat-input"
+                rows={1}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  e.target.style.height = "auto";
+                  e.target.style.height = e.target.scrollHeight + "px";
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    formRef.current?.requestSubmit();
+                  }
+                }}
                 placeholder={attachedImage ? "Add a message…" : `Message @${username}…`}
                 autoComplete="off"
               />

@@ -323,7 +323,7 @@ const DEFAULT_MODEL = "venice-uncensored-1-2";
 export default function Settings() {
   const { logout, authenticatedUser } = useContext(AuthContext);
   const { personaModeEnabled, setPersonaModeEnabled } = useContext(TweetContext);
-  const { personas, deletePersona, updatePersona, notificationSettings, updateNotificationSettings } = useContext(FirebaseContext);
+  const { personas, deletePersona, updatePersona, refreshPersona, notificationSettings, updateNotificationSettings } = useContext(FirebaseContext);
   const navigate = useNavigate();
 
   const [isUpdatingNotif, setIsUpdatingNotif] = useState(false);
@@ -369,6 +369,29 @@ export default function Settings() {
     () => localStorage.getItem("tv_persona_model") ?? DEFAULT_MODEL,
   );
   const [editingPersona, setEditingPersona] = useState(null);
+  const [refreshingPersonaId, setRefreshingPersonaId] = useState(null);
+  const [refreshResult, setRefreshResult] = useState(null); // { id, message }
+
+  async function handleRefresh(p) {
+    if (refreshingPersonaId) return;
+    setRefreshingPersonaId(p._id);
+    setRefreshResult(null);
+    const result = await refreshPersona(p._id, localStorage.getItem("tv_persona_model") ?? undefined);
+    const message = result.updated
+      ? `Updated with ${result.count} new tweet${result.count === 1 ? "" : "s"}`
+      : result.reason === "insufficient_content"
+        ? `Only ${result.count} new tweet${result.count === 1 ? "" : "s"} found (need 10)`
+        : result.reason === "no_token"
+          ? "No resume token saved for this profile"
+          : result.reason === "fetch_failed" || result.reason === "fetch_error"
+            ? "Failed to fetch from Twitter API"
+            : result.reason === "rebuild_error" || result.reason === "empty_response"
+              ? "AI rebuild failed"
+              : "No new content";
+    setRefreshResult({ id: p._id, message });
+    setRefreshingPersonaId(null);
+    setTimeout(() => setRefreshResult((r) => (r?.id === p._id ? null : r)), 4000);
+  }
 
   useEffect(() => {
     const theme = isDark ? "dark" : "light";
@@ -478,6 +501,13 @@ export default function Settings() {
                 </div>
                 <div className="settings-persona-row__actions">
                   <button
+                    className={`settings-persona-btn settings-persona-btn--refresh${refreshingPersonaId === p._id ? " settings-persona-btn--spinning" : ""}`}
+                    onClick={() => handleRefresh(p)}
+                    disabled={!!refreshingPersonaId}
+                  >
+                    <i className="fa-solid fa-rotate" />
+                  </button>
+                  <button
                     className="settings-persona-btn settings-persona-btn--edit"
                     onClick={() => setEditingPersona(p)}
                   >
@@ -496,6 +526,9 @@ export default function Settings() {
                     <i className="fa-solid fa-trash" />
                   </button>
                 </div>
+                {refreshResult?.id === p._id && (
+                  <p className="settings-persona-refresh-result">{refreshResult.message}</p>
+                )}
               </div>
             ))}
           </div>

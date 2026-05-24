@@ -1,8 +1,9 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp as initFirebase } from "firebase/app";
 import { getMessaging, isSupported } from "firebase/messaging";
+import { initializeApp } from "@jah-cloud/core";
+import { getAuth } from "@jah-cloud/auth";
 
-const config = {
+const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -12,10 +13,17 @@ const config = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(config);
-const auth = getAuth(app);
+const firebaseApp = initFirebase(firebaseConfig);
+const messagingPromise = isSupported().then((ok) => ok ? getMessaging(firebaseApp) : null);
 
-// Messaging is only available in browser contexts that support service workers
-const messagingPromise = isSupported().then((ok) => ok ? getMessaging(app) : null);
+const vaultApp = initializeApp({ baseUrl: import.meta.env.VITE_VAULT_URL ?? "http://localhost:4501" });
+const auth = getAuth(vaultApp);
+
+// Resolves once the initial getCurrentUser check completes on page load.
+// Mirrors Firebase's auth.authStateReady() so FirebaseContext.api() can await it.
+let _markReady;
+const _readyPromise = new Promise(resolve => { _markReady = resolve; });
+auth.authStateReady = () => _readyPromise;
+auth._markReady = _markReady;
 
 export { auth, messagingPromise };

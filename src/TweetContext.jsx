@@ -149,6 +149,8 @@ const TweetContextProvider = memo(({ children }) => {
     setRunRequest(true);
     setIsResumed(false);
     setResumedFrom(null);
+    setUsername("");
+    usernameRef.current = "";
     lastFetchedToken.current = null;
     continuationTokenRef.current = null;
     requestGeneration.current += 1;
@@ -179,6 +181,7 @@ const TweetContextProvider = memo(({ children }) => {
   }
 
   async function resumeFeed(username, token) {
+    console.log("[resumeFeed] username:", username, "continuationToken:", token);
     setTweets([]);
     setIndex(0);
     usernameRef.current = username;
@@ -210,8 +213,10 @@ const TweetContextProvider = memo(({ children }) => {
       setContinuationToken(nextToken);
       setIsResumed(true);
       setResumedFrom(username);
+      console.log(username, nextToken, results)
     } catch {
       setResumeError({ username });
+  
     } finally {
       setNewRetweetRequest(false);
     }

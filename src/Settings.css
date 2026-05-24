@@ -154,6 +154,7 @@
 .settings-persona-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   padding: 12px 20px;
   border-top: 1px solid var(--border-card);
   gap: 12px;
@@ -241,6 +242,36 @@
 .settings-persona-btn--delete:hover {
   border-color: #e53e3e;
   color: #e53e3e;
+}
+
+.settings-persona-btn--refresh:hover {
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+.settings-persona-btn--spinning {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+
+@keyframes tv-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.settings-persona-btn--spinning i {
+  display: inline-block;
+  animation: tv-spin 0.8s linear infinite;
+}
+
+.settings-persona-refresh-result {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  width: 100%;
+  padding: 0 0 4px 52px;
+  margin: -4px 0 0;
 }
 
 /* ── Persona edit sheet ──────────────────────────────────────────────── */

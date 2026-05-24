@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@jah-cloud/auth": "file:../Vault/packages/auth",
+    "@jah-cloud/core": "file:../Vault/packages/core",
+    "@jah-cloud/data": "file:../Vault/packages/data",
     "axios": "^1.13.2",
     "dayjs": "^1.11.19",
     "firebase": "^12.7.0",

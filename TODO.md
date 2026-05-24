@@ -157,3 +157,18 @@ AI Personas
 
 Feed Bugs
 [x] Stale continuation token on retweet navigation: when the user tapped a retweet handle mid-chain, in-flight chained fetchTweets calls for the previous user completed after the new feed started and appended old tweets via setTweets(prev => [...prev, ...results]). Fixed with a requestGeneration ref that increments on every new feed request (getTweets, getSearchResults, retweetRequest, resumeFeed). Each fetchTweets/fetchSearchResults call captures the generation at call time and discards results in .then() if the generation has since advanced. continuationTokenRef.current is also cleared immediately on new feed requests to prevent handleReachEnd from firing with a stale token during the loading window.
+
+
+REMIND ME OF THE TIME COMMITMENT
+- [ ] Set up `/api/refresh-feed` endpoint (queries 3-4 random profiles, filters tweets by age & media, returns filtered array)
+- [ ] Implement localStorage cache structure (store tweets array + `refreshedAt` timestamp)
+- [ ] Build deduplication logic (filter fresh tweets against cached tweet IDs using Set)
+- [ ] Create random insertion for fresh tweets (append to cache, shuffle fresh batch section)
+- [ ] Add pull-to-refresh handler (fetch → dedupe → shuffle → save to localStorage)
+- [ ] Implement individual tweet expiry checking (mark/filter tweets older than 4 days on load)
+- [ ] Add cache fallback on app load (if localStorage empty, trigger initial pull-to-refresh)
+- [ ] Create return-to-top divider UI (visual line or "Refreshed at X" timestamp marking cache/fresh boundary)
+- [ ] Infinite scroll to end state (display "Return to top" button or search profiles container)
+- [ ] Username click → fetch full profile via API
+- [ ] Test dedup with duplicate tweet IDs across multiple refresh cycles
+- [ ] Test localStorage size limits (confirm < 5MB threshold)

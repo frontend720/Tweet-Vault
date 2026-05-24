@@ -73,6 +73,7 @@ export default function Bookmarks() {
     controlsOverlayRef.current?.classList.remove("playlist-overlay--visible");
     video.load();
     video.play().catch(() => {});
+    console.log(videoRef.current)
   }, [playIndex]);
 
   function formatTime(s) {

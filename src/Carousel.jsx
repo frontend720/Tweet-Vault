@@ -98,6 +98,18 @@ function Carousel() {
     setIsBuildingPersona(true);
     try {
       const functionsBase = import.meta.env.VITE_FUNCTION_URL ? new URL(import.meta.env.VITE_FUNCTION_URL).origin : "";
+      const imageUrls = [];
+      const posterUrls = [];
+      for (const t of tweets) {
+        if (imageUrls.length >= 2 && posterUrls.length >= 2) break;
+        if (t.media_url?.length && imageUrls.length < 2) imageUrls.push(t.media_url[0]);
+        if (t.video_url?.length && t.extended_entities?.media?.[0]?.media_url_https && posterUrls.length < 2) {
+          posterUrls.push(t.extended_entities.media[0].media_url_https);
+        }
+      }
+      const mediaUrls = [...imageUrls, ...posterUrls];
+
+      console.log("[buildPersona] sending", collectedTextTweets.current.length, "tweets for @" + username);
       const res = await fetch(`${functionsBase}/buildPersona`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,10 +117,13 @@ function Carousel() {
           tweets: collectedTextTweets.current,
           username,
           model: localStorage.getItem("tv_persona_model") ?? undefined,
+          mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
         }),
       });
       const data = await res.json();
+      console.log("[buildPersona] response:", res.status, data.summary ? "got summary" : data);
       if (data.summary) {
+        console.log("[buildPersona] full summary:\n\n" + data.summary);
         const profilePicUrl = tweets?.[0]?.user?.profile_pic_url ?? null;
         await savePersona(username, data.summary, collectedTextTweets.current.length, profilePicUrl);
         setPersonaBuilt(true);
