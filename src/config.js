@@ -1,7 +1,6 @@
 import { initializeApp as initFirebase } from "firebase/app";
 import { getMessaging, isSupported } from "firebase/messaging";
-import { initializeApp } from "@jah-cloud/core";
-import { getAuth } from "@jah-cloud/auth";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -15,15 +14,21 @@ const firebaseConfig = {
 
 const firebaseApp = initFirebase(firebaseConfig);
 const messagingPromise = isSupported().then((ok) => ok ? getMessaging(firebaseApp) : null);
+const firebaseAuth = getAuth(firebaseApp);
 
-const vaultApp = initializeApp({ baseUrl: import.meta.env.VITE_VAULT_URL ?? "http://localhost:4501" });
-const auth = getAuth(vaultApp);
+// Adapter so @jah-cloud/data's createClient works with Firebase ID tokens
+const auth = {
+  authStateReady: () => firebaseAuth.authStateReady(),
+  getIdToken: async () => {
+    const user = firebaseAuth.currentUser;
+    if (!user) return { data: null, error: { code: "auth/not-signed-in" } };
+    try {
+      const token = await user.getIdToken();
+      return { data: { token }, error: null };
+    } catch (err) {
+      return { data: null, error: err };
+    }
+  },
+};
 
-// Resolves once the initial getCurrentUser check completes on page load.
-// Mirrors Firebase's auth.authStateReady() so FirebaseContext.api() can await it.
-let _markReady;
-const _readyPromise = new Promise(resolve => { _markReady = resolve; });
-auth.authStateReady = () => _readyPromise;
-auth._markReady = _markReady;
-
-export { auth, messagingPromise };
+export { auth, firebaseAuth, messagingPromise };

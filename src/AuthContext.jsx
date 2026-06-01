@@ -1,6 +1,13 @@
 import { useState, useEffect, createContext } from "react";
-import { auth } from "./config";
-import { signUp, signIn, signOut, onAuthStateChanged, getCurrentUser } from "@jah-cloud/auth";
+import { firebaseAuth } from "./config";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 
 const AuthContext = createContext();
 
@@ -16,10 +23,7 @@ const AuthContextProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    // Rehydrate session from refresh cookie, then unblock FirebaseContext.api()
-    getCurrentUser(auth).finally(() => auth._markReady());
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
       if (user) {
         setAuthenticatedUser(user.email);
         localStorage.setItem("authenticated-user", JSON.stringify(user.email));
@@ -31,24 +35,43 @@ const AuthContextProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  function extractMessage(err) {
+    if (!err) return null;
+    if (typeof err === "string") return err;
+    return err.message || err.code || "Something went wrong.";
+  }
+
   async function createUser(email, password) {
-    const { error: err } = await signUp(auth, email, password);
-    if (err) setError(err.message);
+    try {
+      await createUserWithEmailAndPassword(firebaseAuth, email, password);
+    } catch (err) {
+      setError(extractMessage(err));
+    }
   }
 
   async function returningUser(email, password) {
-    const { error: err } = await signIn(auth, email, password);
-    if (err) {
-      setError(err.code === "auth/invalid-credentials" ? "Invalid email or password" : err.message);
+    try {
+      await signInWithEmailAndPassword(firebaseAuth, email, password);
+    } catch (err) {
+      const invalidCred = ["auth/invalid-credential", "auth/wrong-password", "auth/user-not-found"];
+      setError(invalidCred.includes(err.code) ? "Invalid email or password" : extractMessage(err));
+    }
+  }
+
+  async function signInWithGoogle() {
+    try {
+      await signInWithPopup(firebaseAuth, new GoogleAuthProvider());
+    } catch (err) {
+      setError(extractMessage(err));
     }
   }
 
   async function logout() {
-    await signOut(auth);
+    await firebaseSignOut(firebaseAuth);
   }
 
   return (
-    <AuthContext.Provider value={{ authenticatedUser, createUser, returningUser, logout, error }}>
+    <AuthContext.Provider value={{ authenticatedUser, createUser, returningUser, signInWithGoogle, logout, error }}>
       {children}
     </AuthContext.Provider>
   );

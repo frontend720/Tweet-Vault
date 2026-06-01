@@ -3,7 +3,6 @@ import { useLocation, useParams, useNavigate, useSearchParams } from "react-rout
 import ReactMarkdown from "react-markdown";
 import { io } from "socket.io-client";
 import { auth } from "../config";
-import { getIdToken } from "@jah-cloud/auth";
 import { TweetContext } from "../TweetContext";
 import { FirebaseContext } from "../FirebaseContext";
 import { AuthContext } from "../AuthContext";
@@ -65,7 +64,7 @@ export default function PersonaChat() {
     if (persona) { setPersonaLoading(false); return; }
     const pid = searchParams.get("pid");
     if (!pid || !authenticatedUser) { setPersonaLoading(false); return; }
-    getIdToken(auth)
+    auth.getIdToken()
       .then(({ data }) => fetch(`${SERVER_URL}/api/personas/${pid}`, {
         headers: { Authorization: `Bearer ${data?.token}` },
       }))
@@ -104,7 +103,7 @@ export default function PersonaChat() {
     if (!persona?._id) return;
 
     let socket;
-    getIdToken(auth).then(({ data }) => {
+    auth.getIdToken().then(({ data }) => {
       socket = io(SERVER_URL, { auth: { token: data?.token } });
       socketRef.current = socket;
 

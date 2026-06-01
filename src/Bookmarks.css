@@ -105,6 +105,12 @@
   background: #000;
   cursor: pointer;
   display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.playlist-video-wrap > .playlist-video {
+  max-width: 515px;
 }
 
 .playlist-video {
