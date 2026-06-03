@@ -95,6 +95,16 @@ export default function Authentication() {
           placeholder="Password"
           style={{ marginBottom: 0 }}
           autoComplete="true"
+          onKeyDown={(e) => {
+            if(e.key === "Enter"){
+              e.preventDefault();
+            if (authenticationToggle) {
+              returningUser(authentication.email, authentication.password);
+            } else {
+              createUser(authentication.email, authentication.password);
+            }
+            }
+          }}
         />
         <label
           onClick={onPasswordVisibilityChange}
