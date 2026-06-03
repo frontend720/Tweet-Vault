@@ -261,17 +261,19 @@
   padding: 0;
   object-fit: cover;
   width: 100%;
+  max-width: 515px;
 }
 
 video {
   margin: 0 auto;
   display: block;
+  max-width: 515px;
 }
 
 /* Tweet metadata card */
 .text-container {
   width: 93%;
-  max-width: 460px;
+  max-width: 515px;
   display: flex;
   flex-direction: column;
   text-align: left;
@@ -287,7 +289,7 @@ video {
 /* Image swiper */
 .image-swiper {
   width: 100%;
-  max-width: 480px;
+  max-width: 515px;
   margin: 0 auto;
 }
 
@@ -627,7 +629,7 @@ button:focus {
   }
 
   .text-container {
-    max-width: 520px;
+    max-width: 515px;
   }
 }
 

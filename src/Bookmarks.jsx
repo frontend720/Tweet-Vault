@@ -28,6 +28,19 @@ export default function Bookmarks() {
   const [viewMode, setViewMode] = useState("scroll");
   const [sortOrder, setSortOrder] = useState("desc");
   const [hideMissingPosters, setHideMissingPosters] = useState(false);
+  const [tabsDropdownOpen, setTabsDropdownOpen] = useState(false);
+  const [anyVideoPlaying, setAnyVideoPlaying] = useState(false);
+
+  useEffect(() => {
+    const onPlay = () => setAnyVideoPlaying(true);
+    const onPause = () => setAnyVideoPlaying(false);
+    document.addEventListener("tv:videoplay", onPlay);
+    document.addEventListener("tv:videopause", onPause);
+    return () => {
+      document.removeEventListener("tv:videoplay", onPlay);
+      document.removeEventListener("tv:videopause", onPause);
+    };
+  }, []);
   const [playIndex, setPlayIndex] = useState(0);
   const PLAYBACK_RATES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 1.75, 2];
   const [________, setIsPaused] = useState(false);
@@ -284,7 +297,7 @@ export default function Bookmarks() {
         />
       )}
       {sortedTweets.length > 0 && (
-        <div className="bookmarks-view-row">
+        <div className="bookmarks-view-row" style={anyVideoPlaying ? { opacity: 0, pointerEvents: "none" } : undefined}>
           <span className="bookmarks-count">{filteredTweets.length} saved</span>
           <div style={{ display: "flex", gap: 8 }}>
             {hasMissingPosters && (
@@ -316,45 +329,55 @@ export default function Bookmarks() {
           </div>
         </div>
       )}
-      {collections.length > 0 && (
-        <div className="bookmarks-tabs">
-          <button
-            className={`bookmarks-tab${selectedCollection === null ? " bookmarks-tab--active" : ""}`}
-            onClick={() => {
-              setSelectedCollection(null);
-              setVisibleCount(PAGE_SIZE);
-              setPlayIndex(0);
-            }}
-          >
-            All
-          </button>
-          {sortedTweets.some((t) => !t.collectionName) && (
+      {collections.length > 0 && (() => {
+        const hasUnsorted = sortedTweets.some((t) => !t.collectionName);
+        const totalTabs = 1 + (hasUnsorted ? 1 : 0) + collections.length;
+        const activeLabel = selectedCollection === null ? "All"
+          : selectedCollection === UNCOLLECTED ? "Unsorted"
+          : selectedCollection;
+
+        const tabButtons = (extraClass = "") => (
+          <>
             <button
-              className={`bookmarks-tab${selectedCollection === UNCOLLECTED ? " bookmarks-tab--active" : ""}`}
-              onClick={() => {
-                setSelectedCollection(UNCOLLECTED);
-                setVisibleCount(PAGE_SIZE);
-                setPlayIndex(0);
-              }}
-            >
-              Unsorted
-            </button>
-          )}
-          {collections.map((name) => (
+              className={`bookmarks-tab${extraClass}${selectedCollection === null ? " bookmarks-tab--active" : ""}`}
+              onClick={() => { setSelectedCollection(null); setVisibleCount(PAGE_SIZE); setPlayIndex(0); setTabsDropdownOpen(false); }}
+            >All</button>
+            {hasUnsorted && (
+              <button
+                className={`bookmarks-tab${extraClass}${selectedCollection === UNCOLLECTED ? " bookmarks-tab--active" : ""}`}
+                onClick={() => { setSelectedCollection(UNCOLLECTED); setVisibleCount(PAGE_SIZE); setPlayIndex(0); setTabsDropdownOpen(false); }}
+              >Unsorted</button>
+            )}
+            {collections.map((name) => (
+              <button
+                key={name}
+                className={`bookmarks-tab${extraClass}${selectedCollection === name ? " bookmarks-tab--active" : ""}`}
+                onClick={() => { setSelectedCollection(name.toLowerCase()); setVisibleCount(PAGE_SIZE); setPlayIndex(0); setTabsDropdownOpen(false); }}
+              >{name}</button>
+            ))}
+          </>
+        );
+
+        return totalTabs > 8 ? (
+          <div className="bookmarks-tabs-dropdown-wrap" style={anyVideoPlaying ? { opacity: 0, pointerEvents: "none" } : undefined}>
             <button
-              key={name}
-              className={`bookmarks-tab${selectedCollection === name ? " bookmarks-tab--active" : ""}`}
-              onClick={() => {
-                setSelectedCollection(name.toLowerCase());
-                setVisibleCount(PAGE_SIZE);
-                setPlayIndex(0);
-              }}
+              className="bookmarks-tabs-dropdown-trigger"
+              onClick={() => setTabsDropdownOpen((o) => !o)}
             >
-              {name}
+              <i className="fa-solid fa-filter" />
+              {activeLabel}
+              <i className={`fa-solid fa-chevron-${tabsDropdownOpen ? "up" : "down"}`} />
             </button>
-          ))}
-        </div>
-      )}
+            {tabsDropdownOpen && (
+              <div className="bookmarks-tabs-dropdown">
+                {tabButtons(" bookmarks-tab--block")}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bookmarks-tabs" style={anyVideoPlaying ? { opacity: 0, pointerEvents: "none" } : undefined}>{tabButtons()}</div>
+        );
+      })()}
       {visible.map((item) => {
         const finalDate =
           item.tweet_creation_timestamp ||

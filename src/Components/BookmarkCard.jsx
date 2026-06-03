@@ -35,6 +35,7 @@ function BookmarkCard({
 
   // isPlaying = true means PAUSED (controls visible), false means PLAYING (controls hidden)
   const [isPlaying, setIsPlaying] = useState(true);
+  const [tagsOpen, setTagsOpen] = useState(false);
 
   const [rate, setRate] = useState(4);
   const [currentTimeSec, setCurrentTimeSec] = useState(0);
@@ -63,6 +64,7 @@ function BookmarkCard({
     setCurrentVideoPosition("0:00");
     setCurrentTimeSec(0);
     setIsPlaying(true);
+    document.dispatchEvent(new CustomEvent("tv:videopause"));
   }
 
   function speedChanger() {
@@ -110,7 +112,7 @@ function BookmarkCard({
       ([entry]) => {
         if (!entry.isIntersecting) {
           const v = videoRef.current;
-          if (v && !v.paused) { v.pause(); setIsPlaying(true); }
+          if (v && !v.paused) { v.pause(); setIsPlaying(true); document.dispatchEvent(new CustomEvent("tv:videopause")); }
         }
       },
       { threshold: 0.1 },
@@ -139,6 +141,7 @@ function BookmarkCard({
     } else {
       videoRef.current.pause();
       setIsPlaying(true);
+      document.dispatchEvent(new CustomEvent("tv:videopause"));
     }
   };
 
@@ -179,11 +182,31 @@ function BookmarkCard({
         <h4 className="bookmark-username">@{username}</h4>
         <small style={{ textAlign: "right" }}>{dayjs(timestamp).fromNow()}</small>
         {tags?.length > 0 && (
-          <div className="bookmark-tags">
-            {tags.map((tag) => (
-              <span key={tag} className="bookmark-tag">{tag}</span>
-            ))}
-          </div>
+          tags.length > 10 ? (
+            <div className="bookmark-tags-collapsible">
+              <button
+                className="bookmark-tags-toggle"
+                onClick={(e) => { e.stopPropagation(); setTagsOpen((o) => !o); }}
+              >
+                <i className={`fa-solid fa-tag`} />
+                {tags.length} tags
+                <i className={`fa-solid fa-chevron-${tagsOpen ? "up" : "down"}`} />
+              </button>
+              {tagsOpen && (
+                <div className="bookmark-tags bookmark-tags--dropdown">
+                  {tags.map((tag) => (
+                    <span key={tag} className="bookmark-tag">{tag}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bookmark-tags">
+              {tags.map((tag) => (
+                <span key={tag} className="bookmark-tag">{tag}</span>
+              ))}
+            </div>
+          )
         )}
         {note && <small className="bookmark-note">{note}</small>}
         <button

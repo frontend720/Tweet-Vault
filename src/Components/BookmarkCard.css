@@ -14,7 +14,7 @@
 
 .bookmark-card {
   width: 100%;
-  max-width: 520px;
+  max-width: 515px;
   margin: 0 auto;
   border-top: 1px solid var(--border-glass);
 }
@@ -171,6 +171,33 @@
   background: rgba(0, 242, 255, 0.06);
 }
 
+.bookmark-tags-collapsible {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.bookmark-tags-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 242, 255, 0.06);
+  border: 1px solid var(--border-hot);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.bookmark-tags--dropdown {
+  justify-content: flex-end;
+}
+
 .bookmark-note {
   display: block;
   text-align: right;
@@ -238,7 +265,7 @@
 /* ── Responsive ─────────────────────────────────────────────────────── */
 @media (min-width: 640px) {
   .bookmark-card {
-    max-width: 560px;
+    max-width: 515px;
   }
 }
 

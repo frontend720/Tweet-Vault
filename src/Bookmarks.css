@@ -5,7 +5,7 @@
   flex-direction: column;
   align-items: center;
   padding-bottom: env(safe-area-inset-bottom);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .top-image {
@@ -23,9 +23,14 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 600px;
+  max-width: 515px;
   padding: 10px 16px 0;
   box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-primary);
+  transition: opacity 0.2s ease;
 }
 
 .bookmarks-count {
@@ -69,7 +74,7 @@
   flex-direction: column;
   height: 100dvh;
   width: 100%;
-  max-width: 750px;
+  max-width: 515px;
   margin: 0 auto;
   background: var(--bg-primary);
   overflow: hidden;
@@ -291,11 +296,16 @@
   flex-direction: row;
   gap: 6px;
   overflow-x: auto;
-  padding: 10px 16px;
+  padding: 10px 16px 8px;
   width: 100%;
-  max-width: 600px;
+  max-width: 515px;
   box-sizing: border-box;
   scrollbar-width: none;
+  position: sticky;
+  top: 41px;
+  z-index: 100;
+  background: var(--bg-primary);
+  transition: opacity 0.2s ease;
 }
 
 .bookmarks-tabs::-webkit-scrollbar {
@@ -321,6 +331,63 @@
   border-color: var(--border-hot);
   background: rgba(0, 242, 255, 0.08);
   color: var(--text-primary);
+}
+
+.bookmarks-tab--block {
+  width: 100%;
+  text-align: left;
+  border-radius: 8px;
+}
+
+.bookmarks-tabs-dropdown-wrap {
+  width: 100%;
+  max-width: 515px;
+  padding: 8px 16px 8px;
+  box-sizing: border-box;
+  position: sticky;
+  top: 41px;
+  z-index: 100;
+  background: var(--bg-primary);
+  transition: opacity 0.2s ease;
+}
+
+.bookmarks-tabs-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border-card);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bookmarks-tabs-dropdown-trigger:hover {
+  border-color: var(--border-hot);
+  color: var(--text-primary);
+}
+
+.bookmarks-tabs-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 16px;
+  right: 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  max-height: 260px;
+  overflow-y: auto;
 }
 
 /* ── Responsive ─────────────────────────────────────────────────────── */
