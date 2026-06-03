@@ -6,7 +6,6 @@ const http = require("http");
 const { Server: IOServer } = require("socket.io");
 const { v4: uuidv4 } = require("uuid");
 const db = require("./db");
-const jwt = require("jsonwebtoken");
 const { admin, requireAuth } = require("./auth");
 
 const app = express();
@@ -116,7 +115,22 @@ function nowString() {
   });
 }
 
-function buildVisionMessages(messages) {
+const DEEP_ANALYSIS_TRIGGERS = /\b(detail|detailed|analyze|analysis|describe|thorough|in[- ]depth|examine|every|forensic|carefully|close look|zoom|what('?s| is) in|tell me everything|full description|complete|breakdown)\b/i;
+
+const FORENSIC_PREAMBLE = `[VISION ANALYSIS MODE]
+You are a forensic visual analyst. Before responding in character, scan the image with maximum precision using this process:
+1. Divide the image into quadrants (top-left, top-right, bottom-left, bottom-right, center) and inventory every distinct element in each zone.
+2. For each element note: exact position, precise color (specific shade — not "blue" but "muted slate blue"), size relative to frame, texture or material if discernible, and any text/logos/symbols (transcribe exactly).
+3. Note lighting direction, shadows, depth of field, and any image artifacts or anomalies.
+Do not generalize. Do not use vague terms like "some" or "various". Count things. Be quantitative.
+After the forensic inventory, respond in character as described below.\n\n`;
+
+function isDeepAnalysisRequest(messages) {
+  const last = [...messages].reverse().find((m) => m.imageUrl && m.role === "user");
+  return last && DEEP_ANALYSIS_TRIGGERS.test(last.content ?? "");
+}
+
+function buildVisionMessages(messages, injectForensicOn = null) {
   return messages.map((m) => {
     if (!m.imageUrl) return { role: m.role, content: m.content };
     return {
@@ -799,9 +813,8 @@ io.use(async (socket, next) => {
   const token = socket.handshake.auth?.token;
   if (!token) return next(new Error("Missing auth token"));
   try {
-    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    if (decoded.type !== "access") throw new Error("Wrong token type");
-    socket.uid = decoded.sub;
+    const decoded = await admin.auth().verifyIdToken(token);
+    socket.uid = decoded.uid;
     next();
   } catch {
     next(new Error("Invalid token"));
