@@ -91,7 +91,6 @@
   color: var(--text-primary);
 }
 
-.hf-loading,
 .hf-empty {
   display: flex;
   align-items: center;
@@ -99,8 +98,4 @@
   height: 100%;
   color: var(--text-secondary);
   font-size: 14px;
-}
-
-.hf-loading i {
-  font-size: 24px;
 }

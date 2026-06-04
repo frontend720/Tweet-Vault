@@ -108,6 +108,7 @@ function Carousel() {
 
   const [activeSlideIdx, setActiveSlideIdx] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isHomeFeedPlaying, setIsHomeFeedPlaying] = useState(false);
   const [isBuildingPersona, setIsBuildingPersona] = useState(false);
   const [personaBuilt, setPersonaBuilt] = useState(false);
 
@@ -323,7 +324,7 @@ function Carousel() {
       {tweets.length === 0 && (
         newRetweetRequest
           ? <div className="cta"><SkeletonFeed /></div>
-          : <HomeFeed onBrowseUsername={(u) => retweetRequest(u)} />
+          : <HomeFeed onBrowseUsername={(u) => retweetRequest(u)} onPlayingChange={setIsHomeFeedPlaying} />
       )}
       <Swiper
         onReachEnd={handleReachEnd}
@@ -524,7 +525,7 @@ function Carousel() {
         )}
       </Swiper>
 
-      {liveTweets.length > 0 && !isInputVisible && !isVideoPlaying && (
+      {(liveTweets.length > 0 || tweets.length === 0) && !isInputVisible && !isVideoPlaying && !isHomeFeedPlaying && (
         <div className="feed-wordmark">
           <i className="fa-solid fa-vault feed-wordmark__icon" />
           <span className="feed-wordmark__text">

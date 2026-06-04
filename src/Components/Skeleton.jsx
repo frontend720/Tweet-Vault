@@ -36,6 +36,18 @@ export function SkeletonFeed() {
   );
 }
 
+export function SkeletonHomeFeed() {
+  return (
+    <div className="sk-hf">
+      <div className="sk sk-hf__video" />
+      <div className="sk-hf__bar">
+        <div className="sk sk-hf__username" />
+        <div className="sk sk-hf__heart" />
+      </div>
+    </div>
+  );
+}
+
 export function SkeletonGallery({ count = 12 }) {
   return (
     <div className="sk-gallery">

@@ -5,6 +5,7 @@ import "swiper/css";
 import { auth } from "../config";
 import { FirebaseContext } from "../FirebaseContext";
 import HeartButton from "./HeartButton";
+import { SkeletonHomeFeed } from "./Skeleton";
 import "./HomeFeed.css";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? "";
@@ -12,7 +13,7 @@ const PROXY_BASE = import.meta.env.VITE_FUNCTION_URL
   ? new URL(import.meta.env.VITE_FUNCTION_URL).origin
   : "";
 
-function HomeFeedCard({ item, isActive, onBrowseUsername }) {
+function HomeFeedCard({ item, isActive, onBrowseUsername, onPlayingChange }) {
   const [started, setStarted] = useState(false);
   const videoRef = useRef(null);
   const { saveTweet, sortedTweets, deleteTweet } = useContext(FirebaseContext);
@@ -24,7 +25,7 @@ function HomeFeedCard({ item, isActive, onBrowseUsername }) {
     const v = videoRef.current;
     if (!v) return;
     if (isActive && started) v.play().catch(() => {});
-    else v.pause();
+    else { v.pause(); onPlayingChange?.(false); }
   }, [isActive, started]);
 
   function handleSave() {
@@ -64,6 +65,8 @@ function HomeFeedCard({ item, isActive, onBrowseUsername }) {
             controls
             src={proxyUrl}
             className="hf-card__video"
+            onPlay={() => onPlayingChange?.(true)}
+            onPause={() => onPlayingChange?.(false)}
           />
         )}
       </div>
@@ -77,7 +80,7 @@ function HomeFeedCard({ item, isActive, onBrowseUsername }) {
   );
 }
 
-export default function HomeFeed({ onBrowseUsername }) {
+export default function HomeFeed({ onBrowseUsername, onPlayingChange }) {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -99,8 +102,8 @@ export default function HomeFeed({ onBrowseUsername }) {
 
   if (loading) {
     return (
-      <div className="hf-loading">
-        <i className="fa-solid fa-circle-notch fa-spin" />
+      <div className="hf-root">
+        <SkeletonHomeFeed />
       </div>
     );
   }
@@ -128,6 +131,7 @@ export default function HomeFeed({ onBrowseUsername }) {
               item={item}
               isActive={i === activeIdx}
               onBrowseUsername={onBrowseUsername}
+              onPlayingChange={onPlayingChange}
             />
           </SwiperSlide>
         ))}

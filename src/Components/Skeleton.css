@@ -169,6 +169,45 @@
   }
 }
 
+/* ── Home feed skeleton ──────────────────────────────────────────────── */
+.sk-hf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--bg-primary);
+  gap: 0;
+}
+
+.sk-hf__video {
+  width: 100%;
+  max-height: 75dvh;
+  aspect-ratio: 9 / 16;
+  border-radius: 0;
+}
+
+.sk-hf__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 16px;
+  box-sizing: border-box;
+}
+
+.sk-hf__username {
+  width: 80px;
+  height: 14px;
+  border-radius: var(--radius-sm);
+}
+
+.sk-hf__heart {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sk {
     animation: none;
