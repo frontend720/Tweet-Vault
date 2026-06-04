@@ -73,6 +73,17 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS chat_messages_lookup ON chat_messages(user_id, persona_id, timestamp);
 
+  CREATE TABLE IF NOT EXISTS feed_cache (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    tweet_data TEXT NOT NULL,
+    source TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS feed_cache_user ON feed_cache(user_id, expires_at);
+
   CREATE TABLE IF NOT EXISTS notification_settings (
     user_id TEXT PRIMARY KEY,
     email TEXT,

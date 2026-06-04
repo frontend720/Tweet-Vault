@@ -9,13 +9,15 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { CarouselCard } from "./Components/CarouselCard";
 import { FirebaseContext } from "./FirebaseContext";
-import RecentSavesComponent from "./Components/RecentSavesComponent.jsx";
-import ResumeSessionsComponent from "./Components/ResumeSessionsComponent.jsx";
 import { SkeletonFeed } from "./Components/Skeleton";
 import HeartButton from "./Components/HeartButton";
 import SavePrompt from "./Components/SavePrompt";
 import UserProfileSheet from "./Components/UserProfileSheet";
 import TapImageViewer from "./Components/TapImageViewer";
+import HomeFeed from "./Components/HomeFeed";
+import { auth } from "./config";
+
+const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? "";
 
 dayjs.extend(relativeTime);
 
@@ -38,10 +40,8 @@ function Carousel() {
     changeDirection,
     retweetRequest,
     newRetweetRequest,
-    loadingText,
     handleReachEnd,
     resetUsername,
-    resumeFeed,
     resumeError,
     setResumeError,
     isResumed,
@@ -61,16 +61,42 @@ function Carousel() {
   const [erroredIds, setErroredIds] = useState(() => new Set());
   const [pendingSave, setPendingSave] = useState(null);
   const swiperRef = useRef(null);
+  const seenVideos = useRef([]);
+  const seenVideoIds = useRef(new Set());
 
-  const resumeSessions = useMemo(() => {
-    const seen = new Set();
-    return media.filter((item) => {
-      if (!item.resumeToken || !item.browseUsername) return false;
-      if (seen.has(item.resumeToken)) return false;
-      seen.add(item.resumeToken);
-      return true;
+  async function flushSeenVideos() {
+    if (seenVideos.current.length === 0) return;
+    const batch = seenVideos.current.splice(0);
+    try {
+      const { data } = await auth.getIdToken();
+      if (!data?.token) return;
+      fetch(`${SERVER_URL}/api/feed/seen`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.token}` },
+        body: JSON.stringify({ tweets: batch }),
+      });
+    } catch { /* fire and forget */ }
+  }
+
+  function captureSeenVideo(tweet) {
+    if (!tweet?.video_url?.length || seenVideoIds.current.has(tweet.tweet_id)) return;
+    const isSaved = media.some((m) => m.tweetId === tweet.tweet_id);
+    if (isSaved) return;
+    const best = tweet.video_url.reduce((a, b) =>
+      (parseInt(b.bitrate ?? 0) > parseInt(a.bitrate ?? 0) ? b : a), tweet.video_url[0]);
+    if (!best?.url) return;
+    seenVideoIds.current.add(tweet.tweet_id);
+    seenVideos.current.push({
+      id: tweet.tweet_id,
+      videoUrl: best.url,
+      posterUrl: tweet.extended_entities?.media?.[0]?.media_url_https ?? null,
+      username: tweet.user?.username ?? null,
     });
-  }, [media]);
+    if (seenVideos.current.length >= 10) flushSeenVideos();
+  }
+
+  // Flush on unmount
+  useEffect(() => () => { flushSeenVideos(); }, []);
 
   const liveTweets = useMemo(() => {
     const seen = new Map();
@@ -294,58 +320,23 @@ function Carousel() {
           </span>
         </div>
       )}
-      <div
-        style={tweets.length === 0 ? { display: "" } : { display: "none" }}
-        className="cta"
-      >
-        <span>{loadingText}</span>
-        {!newRetweetRequest ? (
-          <>
-            <div className="cta-text-container">
-              <label>
-                Ready to browse? Tap an account below or search any handle to see their videos and photos.
-              </label>
-              <div className="suggested-chips">
-                {ACCOUNTS.map((account) => (
-                  <button
-                    key={account}
-                    className="suggested-chip"
-                    onClick={() => retweetRequest(account)}
-                  >
-                    @{account}
-                  </button>
-                ))}
-              </div>
-              <div
-                style={isInputVisible ? { display: "none" } : { display: "" }}
-                className="search-input-container"
-              >
-                <button
-                  className="in-widget-search-btn"
-                  onClick={onInputVisibilityButton}
-                >
-                  <i className="fa-solid fa-magnifying-glass" style={{ marginRight: 8 }}></i>
-                  Search a handle
-                </button>
-              </div>
-            </div>
-            <ResumeSessionsComponent
-              sessions={resumeSessions}
-              onResume={(username, token) => resumeFeed(username, token)}
-            />
-            <RecentSavesComponent media={media} />
-          </>
-        ) : (
-          <SkeletonFeed />
-        )}
-      </div>
+      {tweets.length === 0 && (
+        newRetweetRequest
+          ? <div className="cta"><SkeletonFeed /></div>
+          : <HomeFeed onBrowseUsername={(u) => retweetRequest(u)} />
+      )}
       <Swiper
         onReachEnd={handleReachEnd}
         onSlideChangeTransitionEnd={(swiper) => {
           changeDirection();
           swiper.allowSlideNext = true;
         }}
-        onSlideChange={(swiper) => { setActiveSlideIdx(swiper.activeIndex); setIsVideoPlaying(false); }}
+        onSlideChange={(swiper) => {
+          const prev = liveTweets[swiper.previousIndex];
+          if (prev) captureSeenVideo(prev);
+          setActiveSlideIdx(swiper.activeIndex);
+          setIsVideoPlaying(false);
+        }}
         grabCursor={true}
         modules={[Pagination, Thumbs, Virtual]}
         virtual={true}

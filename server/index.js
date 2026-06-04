@@ -682,6 +682,154 @@ app.delete("/api/chat/:personaId", requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── Home Feed ────────────────────────────────────────────────────────────────
+
+const RAPIDAPI_HOST = "twitter154.p.rapidapi.com";
+const FEED_FRESH_TTL = 12 * 60 * 60 * 1000;
+const FEED_SECOND_CHANCE_TTL = 48 * 60 * 60 * 1000;
+const FEED_MIN_FRESH = 15;
+
+function normalizeFreshTweet(tweet) {
+  const videoUrls = tweet.video_url;
+  if (!videoUrls?.length) return null;
+  const best = videoUrls.reduce((a, b) =>
+    (parseInt(b.bitrate ?? 0) > parseInt(a.bitrate ?? 0) ? b : a), videoUrls[0]);
+  const username = tweet.user?.username ?? tweet.user?.screen_name ?? null;
+  if (!best?.url || !username) return null;
+  return { id: tweet.tweet_id, videoUrl: best.url, posterUrl: tweet.extended_entities?.media?.[0]?.media_url_https ?? null, username, source: "fresh" };
+}
+
+async function fetchUserVideoTweets(username, excludeIds) {
+  const url = `https://${RAPIDAPI_HOST}/user/tweets?username=${encodeURIComponent(username)}&limit=40&include_replies=false`;
+  const res = await fetch(url, { headers: { "x-rapidapi-key": process.env.TWITTER_API_KEY, "x-rapidapi-host": RAPIDAPI_HOST } });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.results ?? data.tweets ?? [])
+    .filter((t) => t.video_url?.length && !t.retweet_status && !excludeIds.has(String(t.tweet_id)))
+    .map(normalizeFreshTweet)
+    .filter(Boolean);
+}
+
+function interleaveFeed(fresh, secondChance, bookmarks) {
+  const result = [];
+  let fi = 0, si = 0, bi = 0;
+  const pattern = ["fresh", "fresh", "second_chance", "fresh", "fresh", "bookmark"];
+  let pi = 0;
+  while (fi < fresh.length || si < secondChance.length || bi < bookmarks.length) {
+    const slot = pattern[pi++ % pattern.length];
+    if      (slot === "fresh"          && fi < fresh.length)         result.push(fresh[fi++]);
+    else if (slot === "second_chance"  && si < secondChance.length)  result.push(secondChance[si++]);
+    else if (slot === "bookmark"       && bi < bookmarks.length)     result.push(bookmarks[bi++]);
+    else if (fi < fresh.length)        result.push(fresh[fi++]);
+    else if (si < secondChance.length) result.push(secondChance[si++]);
+    else if (bi < bookmarks.length)    result.push(bookmarks[bi++]);
+    else break;
+  }
+  return result;
+}
+
+app.get("/api/feed", requireAuth, async (req, res) => {
+  const { uid } = req;
+  const now = Date.now();
+
+  const cachedFreshCount = db.prepare(
+    "SELECT COUNT(*) as n FROM feed_cache WHERE user_id = ? AND source = 'fresh' AND expires_at > ?"
+  ).get(uid, now).n;
+  console.log(`[feed] uid=${uid} cachedFresh=${cachedFreshCount}`);
+
+  if (cachedFreshCount >= FEED_MIN_FRESH) {
+    const rows = db.prepare(
+      "SELECT tweet_data FROM feed_cache WHERE user_id = ? AND expires_at > ? ORDER BY rowid ASC"
+    ).all(uid, now);
+    console.log(`[feed] serving cache: ${rows.length} items`);
+    return res.json(rows.map((r) => JSON.parse(r.tweet_data)));
+  }
+
+  const bookmarkedIds = new Set(
+    db.prepare("SELECT tweet_id FROM bookmarks WHERE user_id = ? AND tweet_id IS NOT NULL").all(uid).map((r) => String(r.tweet_id))
+  );
+
+  const allUsernames = db.prepare(
+    "SELECT DISTINCT username FROM bookmarks WHERE user_id = ? AND post IS NOT NULL AND poster IS NOT NULL AND username IS NOT NULL"
+  ).all(uid).map((r) => r.username);
+  console.log(`[feed] bookmarkedIds=${bookmarkedIds.size} usernames=${allUsernames.length}`);
+
+  const targets = allUsernames.sort(() => Math.random() - 0.5).slice(0, 3);
+  const freshItems = [];
+  for (const username of targets) {
+    if (freshItems.length >= 20) break;
+    try {
+      const tweets = await fetchUserVideoTweets(username, bookmarkedIds);
+      console.log(`[feed] @${username} -> ${tweets.length} video tweets`);
+      const want = Math.ceil(20 / targets.length);
+      freshItems.push(...tweets.slice(0, want));
+    } catch (err) {
+      console.error(`[feed] fetch error for @${username}:`, err.message);
+    }
+  }
+  const fresh = freshItems.slice(0, 20);
+
+  const secondChance = db.prepare(
+    "SELECT tweet_data FROM feed_cache WHERE user_id = ? AND source = 'second_chance' AND expires_at > ? ORDER BY RANDOM() LIMIT 15"
+  ).all(uid, now).map((r) => JSON.parse(r.tweet_data));
+
+  const bookmarks = db.prepare(
+    "SELECT * FROM bookmarks WHERE user_id = ? AND post IS NOT NULL AND poster IS NOT NULL ORDER BY RANDOM() LIMIT 10"
+  ).all(uid).map((r) => ({ id: r.id, videoUrl: r.post, posterUrl: r.poster, username: r.retweet_username || r.username, source: "bookmark" }));
+
+  const feed = interleaveFeed(fresh, secondChance, bookmarks);
+  console.log(`[feed] built: fresh=${fresh.length} secondChance=${secondChance.length} bookmarks=${bookmarks.length} total=${feed.length}`);
+
+  db.prepare("DELETE FROM feed_cache WHERE user_id = ? AND source = 'fresh'").run(uid);
+  const freshExpires = now + FEED_FRESH_TTL;
+  const insertFeed = db.prepare(
+    "INSERT OR REPLACE INTO feed_cache (id, user_id, tweet_data, source, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)"
+  );
+  db.transaction((items) => {
+    for (const item of items) {
+      if (item.source === "fresh") insertFeed.run(item.id, uid, JSON.stringify(item), item.source, now, freshExpires);
+    }
+  })(feed);
+
+  res.json(feed);
+});
+
+app.post("/api/feed/seen", requireAuth, (req, res) => {
+  const { uid } = req;
+  const { tweets } = req.body;
+  if (!Array.isArray(tweets) || tweets.length === 0) return res.json({ ok: true });
+
+  const now = Date.now();
+  const expires = now + FEED_SECOND_CHANCE_TTL;
+  const CAP = 50;
+
+  const existing = db.prepare(
+    "SELECT COUNT(*) as n FROM feed_cache WHERE user_id = ? AND source = 'second_chance'"
+  ).get(uid).n;
+
+  const overflow = existing + tweets.length - CAP;
+  if (overflow > 0) {
+    db.prepare(
+      `DELETE FROM feed_cache WHERE id IN (
+        SELECT id FROM feed_cache WHERE user_id = ? AND source = 'second_chance'
+        ORDER BY created_at ASC LIMIT ?)`
+    ).run(uid, overflow);
+  }
+
+  const insert = db.prepare(
+    "INSERT OR IGNORE INTO feed_cache (id, user_id, tweet_data, source, created_at, expires_at) VALUES (?, ?, ?, 'second_chance', ?, ?)"
+  );
+  db.transaction((items) => {
+    for (const item of items) {
+      if (!item.id || !item.videoUrl) continue;
+      const normalized = { id: item.id, videoUrl: item.videoUrl, posterUrl: item.posterUrl ?? null, username: item.username, source: "second_chance" };
+      insert.run(item.id, uid, JSON.stringify(normalized), now, expires);
+    }
+  })(tweets);
+
+  res.json({ ok: true });
+});
+
 // ─── Notification Settings ────────────────────────────────────────────────────
 
 app.post("/testChatNotification", async (req, res) => {
